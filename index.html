@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+    </head>
+    <body>
+        <div id="app">
+            <div>
+                <button @click="connectBolt">Add Sphero BOLT!</button>
+                <button @click="setColorToAll">Kleur verbonden BOLTs</button>
+                <button @click="goForwardToAll(50)">Go forward</button>
+                <button @click="calibrateAll">Calibrate all drones</button>
+                <button @click="designateBotID">ID</button>
+
+                <select v-model="selectedBolt">
+                    <option v-for="bolt in connectedBolts" :value="bolt">{{ bolt }}</option>
+                </select>
+                <button @click="collorOne">Collor blue</button>
+                <button @click="rotateBolt">Rotate Bolt</button>
+                <!-- {{ connectedBolts }} -->
+            </div>
+        </div>
+    </body>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <script src="./scripts/sphero/const.js"> </script>
+    <script src="./scripts/sphero/queue.js"> </script>
+    <script src="./scripts/sphero/utils.js"> </script>
+    <script src="./scripts/sphero/spheroBolt.js"> </script>
+    <script type="text/javascript">
+        Vue.config.devtools = true
+
+        var app = new Vue({
+            el: "#app",
+            data() {
+                return {
+                    connectedBolts: [],
+                    selectedBolt: ''
+                }
+            },
+            methods: {
+                async connectBolt() {
+                    bolt = new SpheroBolt();
+                    await bolt.connect();
+                    if (bolt.connected) {
+                        // console.log(bolt);
+                        // console.log("Connected with BOLT");
+                        this.connectedBolts.push(bolt);                        
+                        this.setColor(bolt, 255, 0, 0);
+                        bolt.setMainLedColor(255, 255, 255);
+                        bolt.setBackLedColor(0, 0, 0);
+                    }
+                    
+                },
+
+                designateBotID() {
+                    this.connectedBolts[0].printChar("1", 255, 255, 255);
+                },
+
+                // Home made function
+                setColor(bolt, red, green, blue) {
+                    bolt.setMatrixColor(red, green, blue);
+                },
+                setColorToAll(red, green, blue) {
+                    for (bolt of this.connectedBolts) {
+                        // console.log("KLEUR AANGEPAST BOLT")
+                        this.setColor(bolt, 0, 255, 0);
+                    }
+                },
+                goForwardToAll(speed) {
+                    for (bolt of this.connectedBolts) {
+                        console.log("Go forward all");
+                        bolt.roll(speed, 0, []);
+                    }
+                },
+                calibrateAll() {
+                    for (bolt of this.connectedBolts) {
+                        console.log("Calibrate all!");
+                        bolt.calibrateToNorth();
+                    }
+                },
+                collorOne() {
+                    this.setColor(this.selectedBolt, 0, 0, 255);
+                },
+                rotateBolt(){
+                    this.selectedBolt.setHeading(45);
+                }
+            }
+        })
+    </script>
+</html>
