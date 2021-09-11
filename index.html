@@ -11,7 +11,7 @@
                 <button @click="setColorToAll">Kleur verbonden BOLTs</button>
                 <button @click="goForwardToAll(50)">Go forward</button>
                 <button @click="calibrateAll">Calibrate all drones</button>
-                <button @click="designateBotID">ID</button>
+
 
                 <select v-model="selectedBolt">
                     <option v-for="bolt in connectedBolts" :value="bolt">{{ bolt }}</option>
@@ -35,11 +35,13 @@
             data() {
                 return {
                     connectedBolts: [],
-                    selectedBolt: ''
+                    selectedBolt: '',
+                    i: 0,
                 }
             },
             methods: {
                 async connectBolt() {
+                    
                     bolt = new SpheroBolt();
                     await bolt.connect();
                     if (bolt.connected) {
@@ -49,12 +51,12 @@
                         this.setColor(bolt, 255, 0, 0);
                         bolt.setMainLedColor(255, 255, 255);
                         bolt.setBackLedColor(0, 0, 0);
+
+                        // Not yet tested
+                        bolt.printChar(this.i, 255, 255, 255);
+                        this.i++;
                     }
                     
-                },
-
-                designateBotID() {
-                    this.connectedBolts[0].printChar("1", 255, 255, 255);
                 },
 
                 // Home made function
