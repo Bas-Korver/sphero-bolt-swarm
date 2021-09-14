@@ -37,7 +37,7 @@ var app = new Vue({
                     case (listLength <= 78):
                         ascii = String.fromCharCode(((listLength -= 52) + 64));
                         bolt.printChar(ascii, 0, 255, 0);
-                        this.connectedBolts[listLength - 1].botName = (ascii + ' Geel');
+                        this.connectedBolts[listLength - 1].botName = (ascii + ' Groen');
                         break;
 
                     case (listLength <= 104):
