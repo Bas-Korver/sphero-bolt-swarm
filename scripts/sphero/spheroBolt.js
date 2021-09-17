@@ -6,6 +6,10 @@ class SpheroBolt{
 		this.eventListeners = {};
 		this.device = null
 		this.queue = new Queue(this.write);
+				
+		// identification for Bolt
+		this.name = "";
+		this.color = "";
 	};
 
 	/* Connect to Sphero */
