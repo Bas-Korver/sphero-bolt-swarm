@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="utf-8">
     <title></title>
 </head>
-
 <body>
     <div id="app">
         <div>
@@ -13,7 +11,6 @@
             <button @click="setColorToAll">Kleur verbonden BOLTs</button>
             <button @click="goForwardToAll(50)">Go forward</button>
             <button @click="calibrateAll">Calibrate all drones</button>
-
 
             <select v-model="selectedBolt">
                 <option v-for="bolt in connectedBolts" :value="bolt">{{ bolt.name + " " + bolt.color}}</option>
@@ -26,8 +23,8 @@
 
             <button @click="vierkant">Vierkant</button>
 
-            <video id="videoInput" height="250px" width="250px"></video> 
-            <canvas id="canvasOutput" height="250px" width="250px"></canvas>
+            <video id="videoInput" height="190px" width="250px"></video> 
+            <canvas id="canvasOutput" height="190px" width="250px"></canvas>
             <!-- {{ connectedBolts }} -->
         </div>
     </div>

@@ -11,14 +11,14 @@ function openCvReady() {
                 console.log("An error occurred! " + err);
             });
 
-        height = 200;
-        width = 200;
+        height = 190;
+        width = 250;
 
         let canvasFrame = document.getElementById("canvasOutput"); // canvasFrame is the id of <canvas>
         let context = canvasFrame.getContext("2d");
         let src = new cv.Mat(height, width, cv.CV_8UC4);
         let dst = new cv.Mat(height, width, cv.CV_8UC1);
-        const FPS = 30;
+        const FPS = 10;
         function processVideo() {
             let begin = Date.now();
             context.drawImage(video, 0, 0, width, height);
