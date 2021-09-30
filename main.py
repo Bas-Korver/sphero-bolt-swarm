@@ -1,46 +1,83 @@
 import asyncio
 import json
+import threading
+from sphero.sphero_bolt import SpheroBolt
 
-from sphero_bolt import SpheroBolt
 
+# [dict[str, str]]
+def get_json_data(file: str) -> list:
+    """Reads json file and returns a list of dictionaries.
 
-def get_json_data(directory: str) -> dict:
-    with open(directory) as json_file:
+    Parameters
+    ----------
+    file : str
+        location of the json file.
+
+    Returns
+    -------
+    list[dict[str, str]]
+        list with one or more dictionaries.
+    """
+
+    with open(file) as json_file:
         return json.load(json_file)
 
 
-async def run(_data):
-    # mac address of sphero bolt
-    bot1 = next(item for item in _data if item["name"] == "SB-B07F")['address']
-    bot2 = next(item for item in _data if item["name"] == "SB-698B")['address']
-    # connect to sphero bolt
-    my_sphero1 = SpheroBolt(bot1)
-    my_sphero2 = SpheroBolt(bot2)
-    
+async def run(address_dict):
+    bolts = []
+
+    bot = next(
+        item for item in address_dict if item["name"] == "SB-36C3")['address']
+    bolts.append(SpheroBolt(bot))
+    bot = next(
+        item for item in address_dict if item["name"] == "SB-5D9D")['address']
+    bolts.append(SpheroBolt(bot))
+
     try:
-        await my_sphero1.connect()
-        await my_sphero2.connect()
+        for bolt in bolts:
+            connected = await bolt.connect()
+            if not connected:
+                bolts.remove(bolt)
+            else:
+                await bolt.wake()
+                await bolt.resetYaw()
 
-        # wake sphero
-        await my_sphero1.wake()
-        await my_sphero2.wake()
+        for bolt in bolts:
+            await bolt.setMatrixLED(255, 255, 0)
+            await bolt.setBothLEDColors(255, 255, 0)
 
-        await my_sphero1.resetYaw()
-        await my_sphero2.resetYaw()
-        await asyncio.sleep(2)
+        threads = []
 
-        # roll in a square
-        for i in range(4):
-            await my_sphero1.roll(200, 90 * i)
-            await my_sphero2.roll(200, 90 * i)
-            await asyncio.sleep(2)
+        for bolt in bolts:
+            thread = threading.Thread(
+                target=asyncio.run, args=(bolt.roll(200, 0, 5),))
+            threads.append(thread)
+
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+        threads = []
+
+        for bolt in bolts:
+            thread = threading.Thread(
+                target=asyncio.run, args=(bolt.roll(200, 180, 5),))
+            threads.append(thread)
+
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join()
 
     finally:
-        await my_sphero1.disconnect()
-        await my_sphero2.disconnect()
+        for bolt in bolts:
+            await bolt.disconnect()
 
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
-    loop.run_until_complete(run(_data=get_json_data('bolt_addresses.json')))
+    loop.run_until_complete(run(get_json_data('bolt_addresses.json')))
