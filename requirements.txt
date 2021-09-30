@@ -1,2 +1,3 @@
 asyncio
 git+https://github.com/trflorian/bleak#egg=bleak
+opencv-python
