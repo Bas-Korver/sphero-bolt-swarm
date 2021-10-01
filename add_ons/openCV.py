@@ -30,23 +30,36 @@ def calculate_nearest_point(_x, _y):
 # used for controlling the bolt
 def control_bolt(_x1, _x2, _y1, _y2, _closest_point):
     print(_closest_point)
+
     if _y1 < int(_closest_point[1]) < _y2:
         print("correct Y")
+    if _x1 < int(_closest_point[0]) < _x2:
+        print("correct X")
+
     else:
-        # look for the position of the bolt compared to te closest point
-        # return values are the heading for the bolt
-        if _closest_point[1] > center_location_frame[1]:
-            if _y1 > _closest_point[1]:
-                return 180
-            elif _y1 < _closest_point[1]:
-                return 0
-        elif _closest_point[1] < center_location_frame[1]:
-            if _y1 < _closest_point[1]:
-                return 180
-            elif _y1 > _closest_point[1]:
-                return 0
+        # calculate degrees from point to point
+        lat1 = math.radians(_x1)
+        lat2 = math.radians(_closest_point[0])
+
+        diff_long = math.radians(_closest_point[1] - _y1)
+
+        x = math.sin(diff_long) * math.cos(lat2)
+        y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1)
+                                               * math.cos(lat2) * math.cos(diff_long))
+
+        initial_bearing = math.atan2(x, y)
+
+        initial_bearing = math.degrees(initial_bearing)
+        round_bearing = (initial_bearing + 360) % 360
+        return round_bearing
 
 
+# ToDo finish this command
+def send_command(_direction):
+    print("command send, roll: ", _direction)
+
+
+# check if bolt is in richt position
 def checker(_x1, _y1, _x2, _y2):
     correct_position = False
     # check if bolt is in the position
@@ -57,7 +70,7 @@ def checker(_x1, _y1, _x2, _y2):
     if not correct_position:
         # look for the nearest point for the bolt
         closest_point = calculate_nearest_point(_x1, _y1)
-        control_bolt(_x1, _x2, _y1, _y2, closest_point)
+        send_command(control_bolt(_x1, _x2, _y1, _y2, closest_point))
 
 
 # function for the webcam
@@ -91,7 +104,6 @@ def openWebcam(_radius, _webcam=0, _tracking=True):
         for i in point_list:
             cv2.circle(frame, (int(i[0]), int(i[1])), 10, (255, 0, 0))
 
-        # ToDO: make tracking function
         if _tracking:
             hsv_frame = cv2.medianBlur(cv2.cvtColor(frame, cv2.COLOR_BGR2HSV), 9)
 
@@ -113,6 +125,7 @@ def openWebcam(_radius, _webcam=0, _tracking=True):
                     # check if the position of the bolt is correct
                     checker(x, y, (x + w), (y + h))
 
+        # ToDo: get rid of hsv_frame when done
         cv2.imshow("edit", hsv_frame)
         cv2.imshow("frame", frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
