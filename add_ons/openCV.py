@@ -1,9 +1,12 @@
 import numpy as np
 import math
 from cv2 import cv2
+import sphero_bolt
+import asyncio
 
 point_list = []
 center_location_frame = None
+active_bolt = None
 
 
 def pointsInCircle(center=(0, 0), r=25, n=25):
@@ -29,56 +32,53 @@ def calculate_nearest_point(_x, _y):
 
 # used for controlling the bolt
 def control_bolt(_x1, _x2, _y1, _y2, _closest_point):
-    print(_closest_point)
+    lat1 = math.radians(_x1)
+    lat2 = math.radians(_closest_point[0])
 
-    if _y1 < int(_closest_point[1]) < _y2:
-        print("correct Y")
-    if _x1 < int(_closest_point[0]) < _x2:
-        print("correct X")
+    diff_long = math.radians(_closest_point[1] - _y1)
 
-    else:
-        # calculate degrees from point to point
-        lat1 = math.radians(_x1)
-        lat2 = math.radians(_closest_point[0])
+    x = math.sin(diff_long) * math.cos(lat2)
+    y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1)
+                                           * math.cos(lat2) * math.cos(diff_long))
 
-        diff_long = math.radians(_closest_point[1] - _y1)
+    initial_bearing = math.atan2(x, y)
 
-        x = math.sin(diff_long) * math.cos(lat2)
-        y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1)
-                                               * math.cos(lat2) * math.cos(diff_long))
-
-        initial_bearing = math.atan2(x, y)
-
-        initial_bearing = math.degrees(initial_bearing)
-        round_bearing = (initial_bearing + 360) % 360
-        return round_bearing
+    initial_bearing = math.degrees(initial_bearing)
+    round_bearing = (initial_bearing + 360) % 360
+    return round_bearing
 
 
 # ToDo finish this command
-def send_command(_direction):
+async def send_command(_speed,_direction):
+    global active_bolt
     print("command send, roll: ", _direction)
+    await active_bolt.roll(_speed, int(_direction))
 
 
 # check if bolt is in richt position
-def checker(_x1, _y1, _x2, _y2):
+async def checker(_x1, _y1, _x2, _y2):
+    radius = 0
     correct_position = False
     # check if bolt is in the position
     for i in point_list:
         if _x1 < int(i[0]) < _x2 and _y1 < int(i[1]) < _y2:
             # print("Bolt in position")
             correct_position = True
+            await send_command(0,0)
     if not correct_position:
         # look for the nearest point for the bolt
         closest_point = calculate_nearest_point(_x1, _y1)
-        send_command(control_bolt(_x1, _x2, _y1, _y2, closest_point))
+        radius = control_bolt(_x1, _x2, _y1, _y2, closest_point)
+        if radius != 0:
+            await send_command(50,radius)
 
 
 # function for the webcam
-def openWebcam(_radius, _webcam=0, _tracking=True):
+async def openWebcam(_radius, _webcam=0, _tracking=True):
     global point_list
     global center_location_frame
 
-    cap = cv2.VideoCapture(_webcam)
+    cap = cv2.VideoCapture(0)
 
     if not cap.isOpened():
         print("Could not load the camera stream")
@@ -123,7 +123,7 @@ def openWebcam(_radius, _webcam=0, _tracking=True):
                                                (x + w, y + h),
                                                (0, 255, 0), 2)
                     # check if the position of the bolt is correct
-                    checker(x, y, (x + w), (y + h))
+                    await checker(x, y, (x + w), (y + h))
 
         # ToDo: get rid of hsv_frame when done
         cv2.imshow("edit", hsv_frame)
@@ -134,5 +134,20 @@ def openWebcam(_radius, _webcam=0, _tracking=True):
             cv2.destroyAllWindows()
 
 
-# call function
-openWebcam(100)
+async def bolt_connect():
+    # call function]
+    global active_bolt
+    active_bolt = sphero_bolt.SpheroBolt("C8:A9:B8:65:67:EA")
+    await active_bolt.connect()
+    await active_bolt.wake()
+    await active_bolt.resetYaw()
+    await active_bolt.setMatrixLED(255, 0, 0)
+
+    await openWebcam(100, 1)
+
+if __name__ == "__main__":
+    # call function
+    loop = asyncio.get_event_loop()
+    loop.set_debug(False)
+    loop.run_until_complete(bolt_connect())
+
