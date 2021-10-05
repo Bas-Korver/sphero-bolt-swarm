@@ -64,13 +64,17 @@ async def checker(_x1, _y1, _x2, _y2):
         if _x1 < int(i[0]) < _x2 and _y1 < int(i[1]) < _y2:
             # print("Bolt in position")
             correct_position = True
-            await send_command(0,0)
+            await send_command(0, 0)
     if not correct_position:
         # look for the nearest point for the bolt
         closest_point = calculate_nearest_point(_x1, _y1)
+        distance = math.sqrt(((_x1 - closest_point[0]) ** 2) + ((_y1 - closest_point[1]) ** 2))
         radius = control_bolt(_x1, _x2, _y1, _y2, closest_point)
         if radius != 0:
-            await send_command(50,radius)
+            await send_command(40, radius)
+            new_distance = math.sqrt(((_x1 - closest_point[0]) ** 2) + ((_y1 - closest_point[1]) ** 2))
+            if new_distance > distance:
+                await send_command(40, (radius+180))
 
 
 # function for the webcam
@@ -124,6 +128,9 @@ async def openWebcam(_radius, _webcam=0, _tracking=True):
                                                (0, 255, 0), 2)
                     # check if the position of the bolt is correct
                     await checker(x, y, (x + w), (y + h))
+                else:
+                    # set bolt to default
+                    await send_command(0, 0)
 
         # ToDo: get rid of hsv_frame when done
         cv2.imshow("edit", hsv_frame)
@@ -137,7 +144,7 @@ async def openWebcam(_radius, _webcam=0, _tracking=True):
 async def bolt_connect():
     # call function]
     global active_bolt
-    active_bolt = sphero_bolt.SpheroBolt("C8:A9:B8:65:67:EA")
+    active_bolt = sphero_bolt.SpheroBolt("CC:0F:9D:DF:88:98")
     await active_bolt.connect()
     await active_bolt.wake()
     await active_bolt.resetYaw()
