@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+</head>
+<body>
+    <div id="app">
+        <div>
+            <button @click="connectBolt">Add Sphero BOLT!</button>
+            <button @click="setColorToAll">Kleur verbonden BOLTs</button>
+            <button @click="goForwardToAll(50)">Go forward</button>
+            <button @click="calibrateAll">Calibrate all drones</button>
+
+            <select v-model="selectedBolt">
+                <option v-for="bolt in connectedBolts" :value="bolt">{{ bolt.name + " " + bolt.color}}</option>
+            </select>
+            <input type="number" v-model="rotateValue" placeholder="rotate%">
+            <button @click="collorOne">Collor blue</button>
+            <button @click="rotateBolt">Rotate Bolt</button>
+            <button @click="rotateAllBolts">Rotate all Bolts</button>
+            <button @click="disconnectBolt">disconnectBolt</button>
+
+            <button @click="vierkant">Vierkant</button>
+
+            <video id="videoInput" height="190px" width="250px"></video> 
+            <canvas id="canvasOutput" height="190px" width="250px"></canvas>
+            <!-- {{ connectedBolts }} -->
+        </div>
+    </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+<!-- Production script -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/vue@2"></script> -->
+<script src="./scripts/sphero/const.js"> </script>
+<script src="./scripts/sphero/queue.js"> </script>
+<script src="./scripts/sphero/utils.js"> </script>
+<script src="./scripts/sphero/spheroBolt.js"></script>
+<script src="./scripts/app.js"></script>
+
+<script src="./scripts/opencv.js" type="text/javascript"> </script>
+<script src="./scripts/camera.js" type="text/javascript"></script>
+</html>
