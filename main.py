@@ -26,58 +26,87 @@ def get_json_data(file: str) -> list:
 async def run(address_dict):
     bolts = []
 
-    bot = next(
-        item for item in address_dict if item["name"] == "SB-36C3")['address']
-    bolts.append(SpheroBolt(bot))
-    bot = next(
-        item for item in address_dict if item["name"] == "SB-5D9D")['address']
-    bolts.append(SpheroBolt(bot))
+    bot_address = next(
+        item for item in address_dict if item["name"] == "SB-B198")['address']
+    bolt = SpheroBolt(bot_address)
+    bolts.append(bolt)
 
-    try:
-        for bolt in bolts:
-            connected = await bolt.connect()
-            if not connected:
-                bolts.remove(bolt)
-            else:
-                await bolt.wake()
-                await bolt.resetYaw()
+    bot_address = next(
+        item for item in address_dict if item["name"] == "SB-67EA")['address']
+    bolt = SpheroBolt(bot_address)
+    bolts.append(bolt)
 
-        for bolt in bolts:
-            await bolt.setMatrixLED(255, 255, 0)
-            await bolt.setBothLEDColors(255, 255, 0)
+    bot_address = next(
+        item for item in address_dict if item["name"] == "SB-4D1E")['address']
+    bolt = SpheroBolt(bot_address)
+    bolts.append(bolt)
 
-        threads = []
 
-        for bolt in bolts:
-            thread = threading.Thread(
-                target=asyncio.run, args=(bolt.roll(200, 0, 5),))
-            threads.append(thread)
+    for bolt in bolts:
+        connected = await bolt.connect()
+        if not connected:
+            bolts.remove(bolt)
+        else:
+            await bolt.wake()
+            await bolt.resetYaw()
+            # bolt.queue.put(lambda: bolt.wake())
+            # bolt.queue.put(lambda: bolt.resetYaw())
 
-        for thread in threads:
-            thread.start()
+    for bolt in bolts:
+        bolt.queue.put(lambda: bolt.setMatrixLED(255, 255, 0))
+        bolt.queue.put(lambda: bolt.setBothLEDColors(255, 255, 0))
+        await asyncio.sleep(0.05)
 
-        for thread in threads:
-            thread.join()
+    for bolt in bolts:
+        bolt.queue.put(lambda: bolt.roll(50, 0, 5))
+        bolt.queue.put(lambda: bolt.roll(50, 180, 5))
+        await asyncio.sleep(0.05)
 
-        threads = []
+    # try:
+    #     for bolt in bolts:
+    #         connected = await bolt.connect()
+    #         if not connected:
+    #             bolts.remove(bolt)
+    #         else:
+    #             await bolt.wake()
+    #             await bolt.resetYaw()
 
-        for bolt in bolts:
-            thread = threading.Thread(
-                target=asyncio.run, args=(bolt.roll(200, 180, 5),))
-            threads.append(thread)
+    #     for bolt in bolts:
+    #         await bolt.setMatrixLED(255, 255, 0)
+    #         await bolt.setBothLEDColors(255, 255, 0)
 
-        for thread in threads:
-            thread.start()
+    #     threads = []
 
-        for thread in threads:
-            thread.join()
+    #     for bolt in bolts:
+    #         thread = threading.Thread(
+    #             target=asyncio.run, args=(bolt.roll(200, 0, 5),))
+    #         threads.append(thread)
 
-    finally:
-        for bolt in bolts:
-            await bolt.disconnect()
+    #     for thread in threads:
+    #         thread.start()
+
+    #     for thread in threads:
+    #         thread.join()
+
+    #     threads = []
+
+    #     for bolt in bolts:
+    #         thread = threading.Thread(
+    #             target=asyncio.run, args=(bolt.roll(200, 180, 5),))
+    #         threads.append(thread)
+
+    #     for thread in threads:
+    #         thread.start()
+
+    #     for thread in threads:
+    #         thread.join()
+
+    # finally:
+    #     for bolt in bolts:
+    #         await bolt.disconnect()
 
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    loop.set_debug(True)
+    # loop.set_debug(True)
     loop.run_until_complete(run(get_json_data('bolt_addresses.json')))
