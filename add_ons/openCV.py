@@ -1,7 +1,9 @@
 import numpy as np
 import math
+import asyncio
+import json
 from cv2 import cv2
-import sphero_bolt
+from sphero.sphero_bolt import SpheroBolt
 import asyncio
 
 point_list = []
@@ -144,7 +146,7 @@ async def openWebcam(_radius, _webcam=0, _tracking=True):
 async def bolt_connect():
     # call function]
     global active_bolt
-    active_bolt = sphero_bolt.SpheroBolt("CC:0F:9D:DF:88:98")
+    active_bolt = SpheroBolt("CC:0F:9D:DF:88:98")
     await active_bolt.connect()
     await active_bolt.wake()
     await active_bolt.resetYaw()

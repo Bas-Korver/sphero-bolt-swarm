@@ -41,7 +41,6 @@ async def run(address_dict):
     bolt = SpheroBolt(bot_address)
     bolts.append(bolt)
 
-
     for bolt in bolts:
         connected = await bolt.connect()
         if not connected:
@@ -61,49 +60,6 @@ async def run(address_dict):
         bolt.queue.put(lambda: bolt.roll(50, 0, 5))
         bolt.queue.put(lambda: bolt.roll(50, 180, 5))
         await asyncio.sleep(0.05)
-
-    # try:
-    #     for bolt in bolts:
-    #         connected = await bolt.connect()
-    #         if not connected:
-    #             bolts.remove(bolt)
-    #         else:
-    #             await bolt.wake()
-    #             await bolt.resetYaw()
-
-    #     for bolt in bolts:
-    #         await bolt.setMatrixLED(255, 255, 0)
-    #         await bolt.setBothLEDColors(255, 255, 0)
-
-    #     threads = []
-
-    #     for bolt in bolts:
-    #         thread = threading.Thread(
-    #             target=asyncio.run, args=(bolt.roll(200, 0, 5),))
-    #         threads.append(thread)
-
-    #     for thread in threads:
-    #         thread.start()
-
-    #     for thread in threads:
-    #         thread.join()
-
-    #     threads = []
-
-    #     for bolt in bolts:
-    #         thread = threading.Thread(
-    #             target=asyncio.run, args=(bolt.roll(200, 180, 5),))
-    #         threads.append(thread)
-
-    #     for thread in threads:
-    #         thread.start()
-
-    #     for thread in threads:
-    #         thread.join()
-
-    # finally:
-    #     for bolt in bolts:
-    #         await bolt.disconnect()
 
 
 if __name__ == "__main__":
