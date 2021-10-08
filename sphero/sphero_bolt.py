@@ -10,20 +10,21 @@ API_V2_characteristic = "00010002-574f-4f20-5370-6865726f2121"
 
 
 class SpheroBolt:
-    def __init__(self, address, color=[0, 0, 255]):
+    def __init__(self, address, color=[255, 255, 255], low_hsv=[0, 0, 0], high_hsv=[0, 0, 0]):
         self.sequence = 0
         self.address = address
         self.color = color
+        self.low_hsv = low_hsv
+        self.high_hsv = high_hsv
         self.notificationPacket = []
         self.queue = queue.Queue()
 
     async def queueRun(self):
         while True:
-            print('Getting task.')
             task = self.queue.get()
-            print('Running task')
+
             await task()
-            print('Task done.')
+
             self.queue.task_done()
 
     async def connect(self):

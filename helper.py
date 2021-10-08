@@ -3,12 +3,14 @@ import asyncio
 import math
 import json
 import threading
-
+from sphero.sphero_bolt import SpheroBolt
 import numpy as np
 from cv2 import cv2
 from typing import List
 
-from sphero.sphero_bolt import SpheroBolt
+
+CAP = None
+CURRENT_COORDINATES = {}
 
 
 def get_json_data(file: str) -> List[dict[str, str]]:
@@ -28,57 +30,33 @@ def get_json_data(file: str) -> List[dict[str, str]]:
         return json.load(json_file)
 
 
-async def control_bolt(_radius, _cap, _low_sat, _high_sat, _bolt, _point_x, _point_y):
-    if not _cap.isOpened():
-        print("Could not load the camera stream")
+async def viewMovement():
+    print("VIEW MOVEMENTS!")
+
+    global CAP
+    global CURRENT_COORDINATES
+
+    if CAP is None or not CAP.isOpened():
+        print("[Error] Could not open the main webcam stream.")
         return
 
-    while _cap.isOpened():
-        # ret is a boolean regarding whether or not there was a return at all
-        ret, main_frame = _cap.read()
+    while CAP.isOpened():
+        ret, main_frame = CAP.read()
 
-        # get middel point of image
-        (height, width) = main_frame.shape[:2]
-        (centerY, centerX) = (height // 2, width // 2)
-        center_location_frame = (centerX, centerY)
-        cv2.circle(main_frame, (centerX, centerY), 5, (0, 0, 255), 2)
-        cv2.circle(main_frame, (_point_x, _point_y), 5, (0, 0, 255), 2)
-        hsv_frame = cv2.medianBlur(cv2.cvtColor(main_frame, cv2.COLOR_BGR2HSV), 9)
+        for bolt_address in CURRENT_COORDINATES:
+            bolt = CURRENT_COORDINATES[bolt_address]
+            # color is via BGR
+            cv2.circle(main_frame, (int(bolt.get('coordinate')[0]), int(bolt.get('coordinate')[1])), 5,
+                       (int(bolt.get('color')[2]), int(bolt.get('color')[1]), int(bolt.get('color')[0])), 2)
 
-        # use sliders.py for specific values for the situation
-        lower = np.array(_low_sat, np.uint8)
-        upper = np.array(_high_sat, np.uint8)
-        mask = cv2.inRange(hsv_frame, lower, upper)
+        cv2.imshow("Movement Viewer", main_frame)
 
-        contours, hierarchy = cv2.findContours(mask,
-                                               cv2.RETR_TREE,
-                                               cv2.CHAIN_APPROX_SIMPLE)
-
-        # find contours and draw them
-        for pic, contour in enumerate(contours):
-            area = cv2.contourArea(contour)
-            if area > 500:
-                x, y, w, h = cv2.boundingRect(contour)
-                frame = cv2.rectangle(main_frame, (x, y),
-                                      (x + w, y + h),
-                                      (0, 255, 0), 2)
-
-                direction = find_direction((x, y), (_point_x, _point_y))
-
-                # in right position
-                if x < int(_point_x) < x + h and y < int(_point_y) < y + h:
-                    await _bolt.roll(0, 0)
-                else:
-                    await _bolt.roll(50, int(direction))
-
-        cv2.imshow("frame", main_frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
-            # clean all windows en stop capturing the camera feed
-            _cap.release()
+            CAP.release()
             cv2.destroyAllWindows()
 
 
-def find_direction(_point_a, _point_b):
+def findDirection(_point_a, _point_b):
     direction1 = _point_b[0] - _point_a[0]
     direction2 = _point_b[1] - _point_a[1]
     if direction1 == 0:
@@ -98,50 +76,112 @@ def find_direction(_point_a, _point_b):
     return degree
 
 
+# TODO: use for making a circle
 def getCircleCoordinates(_center=(0, 0), _r=10, _n=10):
-    pi = math.pi
     return [
-        (
-            _center[0] + (math.cos(2 * pi / _n * x) * _r),  # x
-            _center[1] + (math.sin(2 * pi / _n * x) * _r)  # y
-        ) for x in range(0, _n + 1)]
+        [
+            _center[0] + (math.cos(2 * math.pi / _n * x) * _r),  # x
+            _center[1] + (math.sin(2 * math.pi / _n * x) * _r)  # y
+        ] for x in range(0, _n + 1)]
 
 
-async def sendCoordinates(_bolts, _coordinates):
-    if len(_bolts) != len(_coordinates):
-        raise Exception("Amount of bolts is not equal to the amount of coordinates.")
+async def sendToCoordinates(bolts, coordinates):
+    global CURRENT_COORDINATES
 
-    # for i in range(_bolts):
-    # # Make thread to send BOLT to a coordinate.
-    # sendCoordinate()
+    threads = []
+    for i in range(len(bolts)):
+        if i >= len(coordinates):
+            break
+
+        thread = threading.Thread(target=asyncio.run, args=(sendToCoordinate(bolts[i], coordinates[i]),))
+        thread.start()
+        threads.append(thread)
+
+    for thread in threads:
+        thread.join()
 
 
-async def sendCoordinate(_bolt, _coordinate):
-    print(f"[!] Sending bolt {_bolt.address} to X: {_coordinate[0]}, Y: {_coordinate[1]}")
+async def sendToCoordinate(bolt, coordinate):
+    global CAP, CURRENT_COORDINATES
+
+    print(f"[!] Sending bolt {bolt.address} to X: {coordinate[0]}, Y: {coordinate[1]}")
+
+    if CAP is None or not CAP.isOpened():
+        print("[Error] Could not open webcam.")
+        return
+
+    CURRENT_COORDINATES[bolt.address] = {
+        'color': bolt.color,
+        'coordinate': coordinate
+    }
+
+    correct_coordinate = False
+    while CAP.isOpened() and not correct_coordinate:
+        ret, main_frame = CAP.read()
+
+        cv2.circle(main_frame, (coordinate[0], coordinate[1]), 5, (0, 0, 255), 2)
+        hsv_frame = cv2.medianBlur(cv2.cvtColor(main_frame, cv2.COLOR_BGR2HSV), 9)
+
+        lower = np.array(bolt.low_hsv, np.uint8)
+        upper = np.array(bolt.high_hsv, np.uint8)
+        mask = cv2.inRange(hsv_frame, lower, upper)
+
+        contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        for pic, contour in enumerate(contours):
+            area = cv2.contourArea(contour)
+            if area > 500:
+                x, y, w, h = cv2.boundingRect(contour)
+                cv2.rectangle(main_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+                direction = findDirection([x, y], coordinate)
+
+                # in right position
+                if x < coordinate[0] < x + h and y < coordinate[1] < y + h:
+                    await bolt.roll(0, 0)
+
+                    correct_coordinate = True
+                    # CURRENT_COORDINATES.pop(bolt.address, None)
+                else:
+                    await bolt.roll(50, int(direction))
+
+        # cv2.imshow(f"Detection for {bolt.color}", main_frame)
+
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            CAP.release()
+            cv2.destroyAllWindows()
+
+
+async def connectBolt(name):
+    addresses = get_json_data("bolt_addresses.json")
+
+    bolt_json_data = next(
+        item for item in addresses if item['name'] == name)
+
+    return SpheroBolt(bolt_json_data['address'], bolt_json_data['color'], bolt_json_data['low_hsv'], bolt_json_data['high_hsv'])
 
 
 async def run():
-    print("Running...")
-    address_dict = get_json_data('bolt_addresses.json')
-    bot_address = next(
-        item for item in address_dict if item['name'] == 'SB-8898')['address']
-    bot_color = next(
-        item for item in address_dict if item['name'] == 'SB-8898')['color']
-    bot_low_sat = next(
-        item for item in address_dict if item['name'] == 'SB-8898')['lowSat']
-    bot_high_sat = next(
-        item for item in address_dict if item['name'] == 'SB-8898')['highSat']
+    global CAP
 
-    bolt = SpheroBolt(bot_address, bot_color)
+    print("[!] Starting Program")
 
-    await bolt.connect()
-    await bolt.resetYaw()
-    await bolt.wake()
+    bolts = [await connectBolt("SB-4D1E"), await connectBolt("SB-BD23")]
 
-    cap = cv2.VideoCapture(0)
-    thread1 = threading.Thread(target=asyncio.run, args=(control_bolt(100, cap, bot_low_sat, bot_high_sat, bolt, 320, 240),))
-    thread1.start()
-    thread1.join()
+    for bolt in bolts:
+        await bolt.connect()
+        await bolt.resetYaw()
+        await bolt.wake()
+
+    print("[!] Starting camera, please wait a few moments...")
+    CAP = cv2.VideoCapture(0)
+
+    thread = threading.Thread(target=asyncio.run, args=(viewMovement(),))
+    thread.start()
+
+    await sendToCoordinates(bolts, getCircleCoordinates())
+
+    thread.join()
 
 
 if __name__ == "__main__":
