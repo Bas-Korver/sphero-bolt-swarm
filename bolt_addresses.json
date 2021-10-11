@@ -1,7 +1,12 @@
 [
     {
         "name": "SB-EA7D",
-        "address": "DD:E6:08:45:EA:7D"
+        "address": "DD:E6:08:45:EA:7D",
+        "color": [
+            0,
+            0,
+            255
+        ]
     },
     {
         "name": "SB-E9BE",

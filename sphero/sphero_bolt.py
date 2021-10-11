@@ -5,23 +5,25 @@ import queue
 from datetime import datetime, timedelta
 from sphero import sphero_constants
 from bleak import BleakClient, BleakError
-API_V2_characteristic = "00010002-574f-4f20-5370-6865726f2121"
 
 class SpheroBolt:
     def __init__(self, address):
         self.sequence = 0
         self.address = address
         self.notificationPacket = []
-        self.queue = queue.Queue()
+        self.q = queue.Queue()
+
 
     async def queueRun(self):
         while True:
             print('Getting task.')
-            task = self.queue.get()
+            task = self.q.get()
+            func = task[0]
+            args = task[1:]
             print('Running task')
-            await task()
+            await func(*args)
             print('Task done.')
-            self.queue.task_done()
+            self.q.task_done()
             
 
     async def connect(self):
@@ -55,7 +57,7 @@ class SpheroBolt:
         except Exception:
             pass
 
-        # self.API_V2_characteristic = "00010002-574f-4f20-5370-6865726f2121"
+        # self.sphero_constants.APIV2_CHARACTERISTIC = "00010002-574f-4f20-5370-6865726f2121"
         AntiDOS_characteristic = "00020005-574f-4f20-5370-6865726f2121"
 
         # Unlock code: prevent the sphero mini
@@ -137,7 +139,7 @@ class SpheroBolt:
         print("[SEND {}] Waking".format(self.sequence))
 
         await self.send(
-            characteristic=API_V2_characteristic,
+            characteristic=sphero_constants.APIV2_CHARACTERISTIC,
             devID=sphero_constants.DEVICE_ID["powerInfo"],
             commID=sphero_constants.POWER_COMMAND_IDS["wake"],
             data=[])  # empty payload
@@ -150,7 +152,7 @@ class SpheroBolt:
         print("[SEND {}] Setting front LED colour to [{}, {}, {}]".format(
             self.sequence, red, green, blue))
 
-        await self.send(characteristic=API_V2_characteristic,
+        await self.send(characteristic=sphero_constants.APIV2_CHARACTERISTIC,
                         devID=sphero_constants.DEVICE_ID["userIO"],
                         commID=sphero_constants.USER_IO_COMMAND_IDS["allLEDs"],
                         data=[0x3f, red, green, blue, red, green, blue])
@@ -163,7 +165,7 @@ class SpheroBolt:
         print("[SEND {}] Setting front LED colour to [{}, {}, {}]".format(
             self.sequence, red, green, blue))
 
-        await self.send(characteristic=API_V2_characteristic,
+        await self.send(characteristic=sphero_constants.APIV2_CHARACTERISTIC,
                         devID=sphero_constants.DEVICE_ID["userIO"],
                         commID=sphero_constants.USER_IO_COMMAND_IDS["allLEDs"],
                         data=[0x07, red, green, blue])
@@ -176,7 +178,7 @@ class SpheroBolt:
         print("[SEND {}] Setting back LED colour to [{}, {}, {}]".format(
             self.sequence, red, green, blue))
 
-        await self.send(characteristic=API_V2_characteristic,
+        await self.send(characteristic=sphero_constants.APIV2_CHARACTERISTIC,
                         devID=sphero_constants.DEVICE_ID["userIO"],
                         commID=sphero_constants.USER_IO_COMMAND_IDS["allLEDs"],
                         data=[0x38, red, green, blue])
@@ -188,7 +190,7 @@ class SpheroBolt:
         print("[SEND {}] Setting matrix LED colour to [{}, {}, {}]".format(
             self.sequence, red, green, blue))
         await self.send(
-            characteristic=API_V2_characteristic,
+            characteristic=sphero_constants.APIV2_CHARACTERISTIC,
             devID=sphero_constants.DEVICE_ID["userIO"],
             commID=sphero_constants.USER_IO_COMMAND_IDS["matrixColor"],
             targetId=0x012,
@@ -205,7 +207,7 @@ class SpheroBolt:
               ' LED colour to [{}, {}, {}]".format(
               self.sequence, char, red, green, blue))
         await self.send(
-            characteristic=API_V2_characteristic,
+            characteristic=sphero_constants.APIV2_CHARACTERISTIC,
             devID=sphero_constants.DEVICE_ID["userIO"],
             commID=sphero_constants.USER_IO_COMMAND_IDS["printChar"],
             targetId=0x012,
@@ -236,7 +238,7 @@ class SpheroBolt:
             print("[SEND {}] Rolling with speed {} and heading {}".format(
                 self.sequence, speed, heading))
             await self.send(
-                characteristic=API_V2_characteristic,
+                characteristic=sphero_constants.APIV2_CHARACTERISTIC,
                 devID=sphero_constants.DEVICE_ID["driving"],
                 commID=sphero_constants.DRIVING_COMMAND_IDS["driveWithHeading"],
                 targetId=0x012,
@@ -249,7 +251,7 @@ class SpheroBolt:
         print("[SEND {}] Resetting yaw".format(self.sequence))
 
         await self.send(
-            characteristic=API_V2_characteristic,
+            characteristic=sphero_constants.APIV2_CHARACTERISTIC,
             devID=sphero_constants.DEVICE_ID["driving"],
             commID=sphero_constants.DRIVING_COMMAND_IDS["resetYaw"],
             data=[]

@@ -1,11 +1,13 @@
+from __future__ import annotations
+from sphero.sphero_bolt import SpheroBolt
 import asyncio
 import json
 import threading
-from sphero.sphero_bolt import SpheroBolt
-
 
 # [dict[str, str]]
-def get_json_data(file: str) -> list:
+
+
+def get_json_data(file: str) -> list[dict[str, str]]:
     """Reads json file and returns a list of dictionaries.
 
     Parameters
@@ -27,20 +29,24 @@ async def run(address_dict):
     bolts = []
 
     bot_address = next(
+        item for item in address_dict if item["name"] == "SB-D4A1")['address']
+    bolt = SpheroBolt(bot_address)
+    bolts.append(bolt)
+
+    bot_address = next(
+        item for item in address_dict if item["name"] == "SB-BD23")['address']
+    bolt = SpheroBolt(bot_address)
+    bolts.append(bolt)
+
+    bot_address = next(
         item for item in address_dict if item["name"] == "SB-B198")['address']
     bolt = SpheroBolt(bot_address)
     bolts.append(bolt)
 
-    bot_address = next(
-        item for item in address_dict if item["name"] == "SB-67EA")['address']
-    bolt = SpheroBolt(bot_address)
-    bolts.append(bolt)
-
-    bot_address = next(
-        item for item in address_dict if item["name"] == "SB-4D1E")['address']
-    bolt = SpheroBolt(bot_address)
-    bolts.append(bolt)
-
+    # bot_address = next(
+    #     item for item in address_dict if item["name"] == "SB-B198")['address']
+    # bolt = SpheroBolt(bot_address)
+    # bolts.append(bolt)
 
     for bolt in bolts:
         connected = await bolt.connect()
@@ -49,18 +55,24 @@ async def run(address_dict):
         else:
             await bolt.wake()
             await bolt.resetYaw()
-            # bolt.queue.put(lambda: bolt.wake())
-            # bolt.queue.put(lambda: bolt.resetYaw())
+
+    bolt.q.put([bolt. setMatrixLEDChar, 'A', 255, 255, 0])
+    bolt.q.put([bolt. setMatrixLEDChar, 'B', 255, 255, 0])
+    bolt.q.put([bolt. setMatrixLEDChar, 'C', 255, 255, 0])
+
+    for bolt in bolts:        
+        bolt.q.put([bolt.setBothLEDColors, 255, 255, 0])
 
     for bolt in bolts:
-        bolt.queue.put(lambda: bolt.setMatrixLED(255, 255, 0))
-        bolt.queue.put(lambda: bolt.setBothLEDColors(255, 255, 0))
-        await asyncio.sleep(0.05)
+        bolt.q.put([bolt.roll, 50, 0, 10])
+        bolt.q.put([bolt.roll, 50, 180, 10])
 
-    for bolt in bolts:
-        bolt.queue.put(lambda: bolt.roll(50, 0, 5))
-        bolt.queue.put(lambda: bolt.roll(50, 180, 5))
-        await asyncio.sleep(0.05)
+    # await asyncio.sleep(1)
+
+    # for bolt in bolts:
+    #     print(bolt)
+    #
+    #     await asyncio.sleep(0.05)
 
     # try:
     #     for bolt in bolts:
