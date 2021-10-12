@@ -1,11 +1,13 @@
 import cv2
 import numpy as np
 
+print("[!] Starting Program")
+
 frameWidth = 1280
 frameHeight = 720
 camBrightness = 150
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 cap.set(3, frameWidth)
 cap.set(4, frameHeight)
 cap.set(10, camBrightness)
@@ -24,7 +26,10 @@ cv2.createTrackbar("HUE Max", "HSV", 179, 179, empty)
 cv2.createTrackbar("SAT Max", "HSV", 255, 255, empty)
 cv2.createTrackbar("VALUE Max", "HSV", 255, 255, empty)
 
-while True:
+if not cap.isOpened():
+    print("Could not load the camera stream")
+
+while True and cap.isOpened():
 
     _, img = cap.read()
     # give the blur (default this is 11), can't be dividable by 2

@@ -124,12 +124,10 @@ class SpheroBolt:
         if data is not None:
             for datum in data:
                 self.checkBytes(command, datum)
-                # command.append(datum)
                 running_sum += datum
         checksum = (~running_sum) & 0xff
         self.checkBytes(command, checksum)
 
-        # command.append(checksum)
         command.append(sphero_constants.API_CONSTANTS["endOfPacket"])
 
         await self.client.write_gatt_char(characteristic, command)
@@ -239,8 +237,8 @@ class SpheroBolt:
             while datetime.now() + timedelta(seconds=1) < run_command_till:
                 await self.roll(speed, heading)
         else:
-            print("[SEND {}] Rolling with speed {} and heading {}".format(
-                self.sequence, speed, heading))
+            # print("[SEND {}] Rolling with speed {} and heading {}".format(
+            #     self.sequence, speed, heading))
             await self.send(
                 characteristic=sphero_constants.APIV2_CHARACTERISTIC,
                 devID=sphero_constants.DEVICE_ID["driving"],

@@ -49,6 +49,9 @@ async def viewMovement():
             cv2.circle(main_frame, (int(bolt.get('coordinate')[0]), int(bolt.get('coordinate')[1])), 5,
                        (int(bolt.get('color')[2]), int(bolt.get('color')[1]), int(bolt.get('color')[0])), 2)
 
+        # TODO: Middel point for testing (del later)
+        cv2.circle(main_frame, (320, 240), 10, (255, 255, 255), 3)
+
         cv2.imshow("Movement Viewer", main_frame)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -76,13 +79,12 @@ def findDirection(_point_a, _point_b):
     return degree
 
 
-# TODO: use for making a circle
 def getCircleCoordinates(_center=(0, 0), _r=10, _n=10):
     return [
         [
             _center[0] + (math.cos(2 * math.pi / _n * x) * _r),  # x
             _center[1] + (math.sin(2 * math.pi / _n * x) * _r)  # y
-        ] for x in range(0, _n + 1)]
+        ] for x in range(0, _n)]
 
 
 async def sendToCoordinates(bolts, coordinates):
@@ -119,7 +121,7 @@ async def sendToCoordinate(bolt, coordinate):
     while CAP.isOpened() and not correct_coordinate:
         ret, main_frame = CAP.read()
 
-        cv2.circle(main_frame, (coordinate[0], coordinate[1]), 5, (0, 0, 255), 2)
+        cv2.circle(main_frame, (int(coordinate[0]), int(coordinate[1])), 5, (0, 0, 255), 2)
         hsv_frame = cv2.medianBlur(cv2.cvtColor(main_frame, cv2.COLOR_BGR2HSV), 9)
 
         lower = np.array(bolt.low_hsv, np.uint8)
@@ -141,7 +143,7 @@ async def sendToCoordinate(bolt, coordinate):
                     await bolt.roll(0, 0)
 
                     correct_coordinate = True
-                    # CURRENT_COORDINATES.pop(bolt.address, None)
+                    CURRENT_COORDINATES.pop(bolt.address, None)
                 else:
                     await bolt.roll(50, int(direction))
 
@@ -166,7 +168,11 @@ async def run():
 
     print("[!] Starting Program")
 
-    bolts = [await connectBolt("SB-4D1E"), await connectBolt("SB-BD23")]
+    bolts = [await connectBolt("SB-B198"), await connectBolt("SB-D4A1")]
+
+    # TODO: Get rid of this when done
+    # this is the brown colord bolt
+    # await connectBolt("SB-67EA")
 
     for bolt in bolts:
         await bolt.connect()
@@ -174,12 +180,21 @@ async def run():
         await bolt.wake()
 
     print("[!] Starting camera, please wait a few moments...")
-    CAP = cv2.VideoCapture(0)
+    CAP = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
     thread = threading.Thread(target=asyncio.run, args=(viewMovement(),))
     thread.start()
 
-    await sendToCoordinates(bolts, getCircleCoordinates())
+    coordinates = getCircleCoordinates((320, 240), 175, 10)
+    for i in range(0, 10):
+        coordinates = [coordinates[-1]] + coordinates[:-1]
+
+        await sendToCoordinates(bolts, coordinates)
+
+        await asyncio.sleep(2)
+
+    for bolt in bolts:
+        await sendToCoordinate(bolt, [320, 240])
 
     thread.join()
 

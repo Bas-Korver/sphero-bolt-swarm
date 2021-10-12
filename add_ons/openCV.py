@@ -84,7 +84,7 @@ async def openWebcam(_radius, _webcam=0, _tracking=True):
     global point_list
     global center_location_frame
 
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
     if not cap.isOpened():
         print("Could not load the camera stream")
@@ -95,9 +95,8 @@ async def openWebcam(_radius, _webcam=0, _tracking=True):
         ret, frame = cap.read()
         (height, width) = frame.shape[:2]
         (circleCenterH, circleCenterW) = (height//2, width//2)
-
+        print(circleCenterH, circleCenterW)
         # get the center location of the frame as a global variable
-        center_location_frame = (circleCenterH, circleCenterW)
 
         # color is via BGR
         cv2.circle(frame, (circleCenterW, circleCenterH), _radius, (0, 0, 255), 2)
@@ -106,7 +105,6 @@ async def openWebcam(_radius, _webcam=0, _tracking=True):
         if not point_list:
             point_list = pointsInCircle((circleCenterW, circleCenterH), _radius, 10)
 
-        # ToDO: for visualizing, get rid of this when done
         for i in point_list:
             cv2.circle(frame, (int(i[0]), int(i[1])), 10, (255, 0, 0))
 
