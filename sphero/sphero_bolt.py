@@ -6,8 +6,6 @@ from datetime import datetime, timedelta
 from sphero import sphero_constants
 from bleak import BleakClient, BleakError
 
-API_V2_characteristic = "00010002-574f-4f20-5370-6865726f2121"
-
 
 class SpheroBolt:
     def __init__(self, address, color=[255, 255, 255], low_hsv=[0, 0, 0], high_hsv=[0, 0, 0]):
@@ -17,16 +15,21 @@ class SpheroBolt:
         self.low_hsv = low_hsv
         self.high_hsv = high_hsv
         self.notificationPacket = []
-        self.queue = queue.Queue()
+        self.q = queue.Queue()
+
 
     async def queueRun(self):
         while True:
-            task = self.queue.get()
-
-            await task()
-
-            self.queue.task_done()
-
+            task = self.q.get()
+            
+            func = task[0]            
+            args = task[1:]
+            
+            await func(*args)
+            
+            self.q.task_done()
+            
+            
     async def connect(self):
         """
         Connects to a Sphero Bolt of a specified MAC address if it can find it.
@@ -58,7 +61,7 @@ class SpheroBolt:
         except Exception:
             pass
 
-        # self.API_V2_characteristic = "00010002-574f-4f20-5370-6865726f2121"
+        # self.sphero_constants.APIV2_CHARACTERISTIC = "00010002-574f-4f20-5370-6865726f2121"
         AntiDOS_characteristic = "00020005-574f-4f20-5370-6865726f2121"
 
         # Unlock code: prevent the sphero mini
