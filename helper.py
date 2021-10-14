@@ -147,7 +147,7 @@ async def sendToCoordinate(bolt, coordinate):
                 else:
                     await bolt.roll(50, int(direction))
 
-        # cv2.imshow(f"Detection for {bolt.color}", main_frame)
+        cv2.imshow(f"Detection for {bolt.color}", main_frame)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
             CAP.release()
@@ -168,11 +168,15 @@ async def run():
 
     print("[!] Starting Program")
 
-    bolts = [await connectBolt("SB-B198"), await connectBolt("SB-D4A1")]
+    # Color bolts:
+    # SB-B198: Red
+    # SB:D4A1: Blue
+    # SB-67EA: Orange
+    # SB-BD23: Green
+    # SB-5D9D: Yellow
 
-    # TODO: Get rid of this when done
-    # this is the brown colord bolt
-    # await connectBolt("SB-67EA")
+    bolts = [await connectBolt("SB-B198"), await connectBolt("SB-D4A1"), await connectBolt("SB-67EA"),
+             await connectBolt("SB-BD23"), await connectBolt("SB-5D9D")]
 
     for bolt in bolts:
         await bolt.connect()
@@ -185,18 +189,18 @@ async def run():
     thread = threading.Thread(target=asyncio.run, args=(viewMovement(),))
     thread.start()
 
-    coordinates = getCircleCoordinates((320, 240), 175, 10)
-    for i in range(0, 10):
+    coordinates = getCircleCoordinates((320, 240), 175, 5)
+    for i in range(0, 5):
         coordinates = [coordinates[-1]] + coordinates[:-1]
 
         await sendToCoordinates(bolts, coordinates)
 
         await asyncio.sleep(2)
 
-    for bolt in bolts:
-        await sendToCoordinate(bolt, [320, 240])
+    print("[!] Program completed!")
 
     thread.join()
+
 
 
 if __name__ == "__main__":

@@ -70,7 +70,7 @@ class SpheroBolt:
 
         thread = threading.Thread(target=asyncio.run, args=(self.queueRun(),))
         thread.start()
-
+        
         self.queue.put(lambda: self.setBothLEDColors(self.color[0], self.color[1], self.color[2]))
         self.queue.put(lambda: self.setMatrixLED(self.color[0], self.color[1], self.color[2]))
 
