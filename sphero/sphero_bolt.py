@@ -5,25 +5,32 @@ import queue
 from datetime import datetime, timedelta
 from sphero import sphero_constants
 from bleak import BleakClient, BleakError
-API_V2_characteristic = "00010002-574f-4f20-5370-6865726f2121"
+
 
 class SpheroBolt:
-    def __init__(self, address):
+    def __init__(self, address, name, color=[255, 255, 255], low_hsv=[0, 0, 0], high_hsv=[0, 0, 0]):
         self.sequence = 0
         self.address = address
+        self.name = name
+        self.color = color
+        self.low_hsv = low_hsv
+        self.high_hsv = high_hsv
         self.notificationPacket = []
-        self.queue = queue.Queue()
+        self.q = queue.Queue()
+
 
     async def queueRun(self):
         while True:
-            print('Getting task.')
-            task = self.queue.get()
-            print('Running task')
-            await task()
-            print('Task done.')
-            self.queue.task_done()
+            task = self.q.get()
             
-
+            func = task[0]            
+            args = task[1:]
+            
+            await func(*args)
+            
+            self.q.task_done()
+            
+            
     async def connect(self):
         """
         Connects to a Sphero Bolt of a specified MAC address if it can find it.
@@ -55,7 +62,7 @@ class SpheroBolt:
         except Exception:
             pass
 
-        # self.API_V2_characteristic = "00010002-574f-4f20-5370-6865726f2121"
+        # self.sphero_constants.APIV2_CHARACTERISTIC = "00010002-574f-4f20-5370-6865726f2121"
         AntiDOS_characteristic = "00020005-574f-4f20-5370-6865726f2121"
 
         # Unlock code: prevent the sphero mini
@@ -67,6 +74,10 @@ class SpheroBolt:
 
         thread = threading.Thread(target=asyncio.run, args=(self.queueRun(),))
         thread.start()
+
+        await self.setMatrixLED(self.color[0], self.color[1], self.color[2])
+        await self.setFrontLEDColor(255, 255, 255)
+        await self.setBackLEDColor(255, 0, 0)
 
         print("[INIT] Initialization complete\n")
 
@@ -118,12 +129,10 @@ class SpheroBolt:
         if data is not None:
             for datum in data:
                 self.checkBytes(command, datum)
-                # command.append(datum)
                 running_sum += datum
         checksum = (~running_sum) & 0xff
         self.checkBytes(command, checksum)
 
-        # command.append(checksum)
         command.append(sphero_constants.API_CONSTANTS["endOfPacket"])
 
         await self.client.write_gatt_char(characteristic, command)
@@ -137,7 +146,7 @@ class SpheroBolt:
         print("[SEND {}] Waking".format(self.sequence))
 
         await self.send(
-            characteristic=API_V2_characteristic,
+            characteristic=sphero_constants.APIV2_CHARACTERISTIC,
             devID=sphero_constants.DEVICE_ID["powerInfo"],
             commID=sphero_constants.POWER_COMMAND_IDS["wake"],
             data=[])  # empty payload
@@ -150,7 +159,7 @@ class SpheroBolt:
         print("[SEND {}] Setting front LED colour to [{}, {}, {}]".format(
             self.sequence, red, green, blue))
 
-        await self.send(characteristic=API_V2_characteristic,
+        await self.send(characteristic=sphero_constants.APIV2_CHARACTERISTIC,
                         devID=sphero_constants.DEVICE_ID["userIO"],
                         commID=sphero_constants.USER_IO_COMMAND_IDS["allLEDs"],
                         data=[0x3f, red, green, blue, red, green, blue])
@@ -163,7 +172,7 @@ class SpheroBolt:
         print("[SEND {}] Setting front LED colour to [{}, {}, {}]".format(
             self.sequence, red, green, blue))
 
-        await self.send(characteristic=API_V2_characteristic,
+        await self.send(characteristic=sphero_constants.APIV2_CHARACTERISTIC,
                         devID=sphero_constants.DEVICE_ID["userIO"],
                         commID=sphero_constants.USER_IO_COMMAND_IDS["allLEDs"],
                         data=[0x07, red, green, blue])
@@ -176,7 +185,7 @@ class SpheroBolt:
         print("[SEND {}] Setting back LED colour to [{}, {}, {}]".format(
             self.sequence, red, green, blue))
 
-        await self.send(characteristic=API_V2_characteristic,
+        await self.send(characteristic=sphero_constants.APIV2_CHARACTERISTIC,
                         devID=sphero_constants.DEVICE_ID["userIO"],
                         commID=sphero_constants.USER_IO_COMMAND_IDS["allLEDs"],
                         data=[0x38, red, green, blue])
@@ -188,7 +197,7 @@ class SpheroBolt:
         print("[SEND {}] Setting matrix LED colour to [{}, {}, {}]".format(
             self.sequence, red, green, blue))
         await self.send(
-            characteristic=API_V2_characteristic,
+            characteristic=sphero_constants.APIV2_CHARACTERISTIC,
             devID=sphero_constants.DEVICE_ID["userIO"],
             commID=sphero_constants.USER_IO_COMMAND_IDS["matrixColor"],
             targetId=0x012,
@@ -203,9 +212,9 @@ class SpheroBolt:
         print('setting matrix color')
         print("[SEND {}] Setting matrix char to ' {} \
               ' LED colour to [{}, {}, {}]".format(
-              self.sequence, char, red, green, blue))
+            self.sequence, char, red, green, blue))
         await self.send(
-            characteristic=API_V2_characteristic,
+            characteristic=sphero_constants.APIV2_CHARACTERISTIC,
             devID=sphero_constants.DEVICE_ID["userIO"],
             commID=sphero_constants.USER_IO_COMMAND_IDS["printChar"],
             targetId=0x012,
@@ -233,23 +242,23 @@ class SpheroBolt:
             while datetime.now() + timedelta(seconds=1) < run_command_till:
                 await self.roll(speed, heading)
         else:
-            print("[SEND {}] Rolling with speed {} and heading {}".format(
-                self.sequence, speed, heading))
+            # print("[SEND {}] Rolling with speed {} and heading {}".format(
+            #     self.sequence, speed, heading))
             await self.send(
-                characteristic=API_V2_characteristic,
+                characteristic=sphero_constants.APIV2_CHARACTERISTIC,
                 devID=sphero_constants.DEVICE_ID["driving"],
                 commID=sphero_constants.DRIVING_COMMAND_IDS["driveWithHeading"],
                 targetId=0x012,
                 data=[speed, (heading >> 8) & 0xff, heading & 0xff, 0]
             )
 
-            await asyncio.sleep(2)
+            # await asyncio.sleep(2)
 
     async def resetYaw(self):
         print("[SEND {}] Resetting yaw".format(self.sequence))
 
         await self.send(
-            characteristic=API_V2_characteristic,
+            characteristic=sphero_constants.APIV2_CHARACTERISTIC,
             devID=sphero_constants.DEVICE_ID["driving"],
             commID=sphero_constants.DRIVING_COMMAND_IDS["resetYaw"],
             data=[]
