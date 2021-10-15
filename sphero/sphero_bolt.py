@@ -8,9 +8,10 @@ from bleak import BleakClient, BleakError
 
 
 class SpheroBolt:
-    def __init__(self, address, color=[255, 255, 255], low_hsv=[0, 0, 0], high_hsv=[0, 0, 0]):
+    def __init__(self, address, name, color=[255, 255, 255], low_hsv=[0, 0, 0], high_hsv=[0, 0, 0]):
         self.sequence = 0
         self.address = address
+        self.name = name
         self.color = color
         self.low_hsv = low_hsv
         self.high_hsv = high_hsv
@@ -73,9 +74,10 @@ class SpheroBolt:
 
         thread = threading.Thread(target=asyncio.run, args=(self.queueRun(),))
         thread.start()
-        
-        await self.setBothLEDColors(self.color[0], self.color[1], self.color[2])
+
         await self.setMatrixLED(self.color[0], self.color[1], self.color[2])
+        await self.setFrontLEDColor(255, 255, 255)
+        await self.setBackLEDColor(255, 0, 0)
 
         print("[INIT] Initialization complete\n")
 

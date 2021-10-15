@@ -8,7 +8,6 @@ import numpy as np
 from cv2 import cv2
 from typing import List
 
-
 CAP = None
 CURRENT_COORDINATES = {}
 
@@ -89,6 +88,7 @@ def getCircleCoordinates(_center=(0, 0), _r=10, _n=10):
 
 async def sendToCoordinates(bolts, coordinates):
     global CURRENT_COORDINATES
+    global CURRENT_COORDINATES
 
     threads = []
     for i in range(len(bolts)):
@@ -105,6 +105,10 @@ async def sendToCoordinates(bolts, coordinates):
 
 async def sendToCoordinate(bolt, coordinate):
     global CAP, CURRENT_COORDINATES
+
+    await bolt.setMatrixLED(0, 0, 0)
+    await bolt.setFrontLEDColor(0, 0, 0)
+    await bolt.setBackLEDColor(0, 0, 0)
 
     print(f"[!] Sending bolt {bolt.address} to X: {coordinate[0]}, Y: {coordinate[1]}")
 
@@ -130,9 +134,11 @@ async def sendToCoordinate(bolt, coordinate):
 
         contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-        for pic, contour in enumerate(contours):
+        if len(contours) > 0:
+        # for pic, contour in enumerate(contours):
+            contour = max(contours, key=cv2.contourArea)
             area = cv2.contourArea(contour)
-            if area > 500:
+            if area > 100:
                 x, y, w, h = cv2.boundingRect(contour)
                 cv2.rectangle(main_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
@@ -140,14 +146,20 @@ async def sendToCoordinate(bolt, coordinate):
 
                 # in right position
                 if x < coordinate[0] < x + h and y < coordinate[1] < y + h:
-                    await bolt.roll(0, 0)
+                    # to be sure that the bolt gets the command
+                    for i in range(10):
+                        await bolt.roll(0, 0)
+
+                    await bolt.setMatrixLED(bolt.color[0], bolt.color[1], bolt.color[2])
+                    await bolt.setFrontLEDColor(255, 255, 255)
+                    await bolt.setBackLEDColor(255, 0, 0)
 
                     correct_coordinate = True
                     CURRENT_COORDINATES.pop(bolt.address, None)
                 else:
-                    await bolt.roll(50, int(direction))
+                    await bolt.roll(35, int(direction))
 
-        cv2.imshow(f"Detection for {bolt.color}", main_frame)
+        cv2.imshow(f"Detection for {bolt.name}, coordinates: {coordinate}", main_frame)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
             CAP.release()
@@ -160,7 +172,8 @@ async def connectBolt(name):
     bolt_json_data = next(
         item for item in addresses if item['name'] == name)
 
-    return SpheroBolt(bolt_json_data['address'], bolt_json_data['color'], bolt_json_data['low_hsv'], bolt_json_data['high_hsv'])
+    return SpheroBolt(bolt_json_data['address'], name, bolt_json_data['color'], bolt_json_data['low_hsv'],
+                      bolt_json_data['high_hsv'])
 
 
 async def run():
@@ -170,14 +183,16 @@ async def run():
 
     # Color bolts:
     # SB-B198: Red
-    # SB:D4A1: Blue
-    # SB-67EA: Orange
-    # SB-BD23: Green
-    # SB-5D9D: Yellow
+    # SB-D4A1: Purple
+    # SB-67EA: Green
+    # SB-BD23: Blue
+    # SB-E9BE: Gold
+    # SB-4D1E: Yellow
 
-    bolts = [await connectBolt("SB-B198"), await connectBolt("SB-D4A1"), await connectBolt("SB-67EA"),
-             await connectBolt("SB-BD23"), await connectBolt("SB-5D9D")]
-
+    # bolts = [await connectBolt("SB-B198"), await connectBolt("SB-D4A1"), await connectBolt("SB-67EA"),
+    #          await connectBolt("SB-BD23"), await connectBolt("SB-5D9D"), await connectBolt("SB-E9BE")]
+    bolts = [await connectBolt("SB-D4A1"), await connectBolt("SB-E9BE"), await connectBolt("SB-67EA"),
+             await connectBolt("SB-BD23"), await connectBolt("SB-B198"), await connectBolt("SB-4D1E")]
     for bolt in bolts:
         await bolt.connect()
         await bolt.resetYaw()
@@ -189,8 +204,8 @@ async def run():
     thread = threading.Thread(target=asyncio.run, args=(viewMovement(),))
     thread.start()
 
-    coordinates = getCircleCoordinates((320, 240), 175, 5)
-    for i in range(0, 5):
+    coordinates = getCircleCoordinates((320, 240), 175, 6)
+    for i in range(0, 6):
         coordinates = [coordinates[-1]] + coordinates[:-1]
 
         await sendToCoordinates(bolts, coordinates)
@@ -200,7 +215,6 @@ async def run():
     print("[!] Program completed!")
 
     thread.join()
-
 
 
 if __name__ == "__main__":
