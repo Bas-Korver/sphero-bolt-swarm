@@ -5,11 +5,25 @@
     <form @submit="sendForm" action="/" method="POST">
       <div class="flex">
         <label for="name" class="w-1/4 mr-4">Name</label>
-        <input type="text" id="name" name="name" v-model="name" class="w-full" disabled />
+        <input
+          type="text"
+          id="name"
+          name="name"
+          v-model="name"
+          class="w-full"
+          disabled
+        />
       </div>
       <div class="flex">
         <label for="address" class="w-1/4 mr-4">MAC-address</label>
-        <input type="text" id="address" name="address" v-model="address" class="w-full" disabled />
+        <input
+          type="text"
+          id="address"
+          name="address"
+          v-model="address"
+          class="w-full"
+          disabled
+        />
       </div>
     </form>
   </modal>
