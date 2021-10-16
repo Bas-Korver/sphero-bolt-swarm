@@ -42,7 +42,7 @@ async def viewMovement():
     while CAP.isOpened():
         ret, main_frame = CAP.read()
 
-        for bolt_address in CURRENT_COORDINATES:
+        for bolt_address in list(CURRENT_COORDINATES):
             bolt = CURRENT_COORDINATES[bolt_address]
             # color is via BGR
             cv2.circle(main_frame, (int(bolt.get('coordinate')[0]), int(bolt.get('coordinate')[1])), 5,
@@ -91,6 +91,11 @@ async def sendToCoordinates(bolts, coordinates):
     global CURRENT_COORDINATES
 
     threads = []
+    for bolt in bolts:
+        await bolt.setMatrixLED(0, 0, 0)
+        await bolt.setFrontLEDColor(0, 0, 0)
+        await bolt.setBackLEDColor(0, 0, 0)
+
     for i in range(len(bolts)):
         if i >= len(coordinates):
             break
@@ -102,13 +107,14 @@ async def sendToCoordinates(bolts, coordinates):
     for thread in threads:
         thread.join()
 
+    for bolt in bolts:
+        await bolt.setMatrixLED(bolt.color[0], bolt.color[1], bolt.color[2])
+        await bolt.setFrontLEDColor(255, 255, 255)
+        await bolt.setBackLEDColor(255, 0, 0)
+
 
 async def sendToCoordinate(bolt, coordinate):
     global CAP, CURRENT_COORDINATES
-
-    await bolt.setMatrixLED(0, 0, 0)
-    await bolt.setFrontLEDColor(0, 0, 0)
-    await bolt.setBackLEDColor(0, 0, 0)
 
     print(f"[!] Sending bolt {bolt.address} to X: {coordinate[0]}, Y: {coordinate[1]}")
 
@@ -138,7 +144,7 @@ async def sendToCoordinate(bolt, coordinate):
         # for pic, contour in enumerate(contours):
             contour = max(contours, key=cv2.contourArea)
             area = cv2.contourArea(contour)
-            if area > 100:
+            if area >= 150:
                 x, y, w, h = cv2.boundingRect(contour)
                 cv2.rectangle(main_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
@@ -149,10 +155,6 @@ async def sendToCoordinate(bolt, coordinate):
                     # to be sure that the bolt gets the command
                     for i in range(10):
                         await bolt.roll(0, 0)
-
-                    await bolt.setMatrixLED(bolt.color[0], bolt.color[1], bolt.color[2])
-                    await bolt.setFrontLEDColor(255, 255, 255)
-                    await bolt.setBackLEDColor(255, 0, 0)
 
                     correct_coordinate = True
                     CURRENT_COORDINATES.pop(bolt.address, None)
@@ -210,7 +212,7 @@ async def run():
 
         await sendToCoordinates(bolts, coordinates)
 
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
 
     print("[!] Program completed!")
 
