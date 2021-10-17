@@ -1,8 +1,10 @@
 <template>
   <div id="app" class="relative w-screen h-screen overflow-hidden font-sans">
-    <div v-if="!bolts.length" class="fixed w-full h-full z-50">
-      <NotConnected @connected="connectedToBOLT" />
-    </div>
+    <transition name="transition-not-connected">
+      <div v-if="!bolts.length" class="fixed w-full h-full z-50">
+        <NotConnected @connected="connectedToBOLT" />
+      </div>
+    </transition>
     <div class="relative w-full h-full">
       <Index />
     </div>
@@ -30,3 +32,15 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.transition-not-connected-enter-active,
+.transition-not-connected-leave-active {
+  transition: all 400ms;
+}
+.transition-not-connected-enter,
+.transition-not-connected-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+</style>

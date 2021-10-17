@@ -92,6 +92,7 @@
 
 <script>
 import Loading from "@/components/others/Loading";
+
 export default {
   name: "NotConnected",
   components: {
