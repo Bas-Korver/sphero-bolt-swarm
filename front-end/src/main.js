@@ -5,9 +5,10 @@ import VModal from "vue-js-modal";
 import "./assets/tailwind.css";
 
 axios.defaults.baseURL = "/bolts/";
+Vue.prototype.$http = axios;
 
 Vue.config.productionTip = false;
-Vue.prototype.$http = axios;
+
 Vue.use(VModal);
 
 new Vue({

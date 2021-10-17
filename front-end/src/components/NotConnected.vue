@@ -25,7 +25,7 @@
         <Loading />
       </div>
       <div v-else>
-        <h1 class="text-2xl font-bold text-gray-900 mb-1">Connect to BOLTs</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-1">Connect to BOLTs</h1>
         <p class="mb-6 text-gray-700">
           Select the BOLTs you want to connect with and click on the connect
           button.
@@ -143,7 +143,7 @@ export default {
   mounted() {
     this.loading = {
       active: true,
-      text: "Loading available BOLTs...",
+      text: "Fetching available BOLTs...",
     };
 
     this.$http
