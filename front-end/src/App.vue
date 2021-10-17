@@ -1,9 +1,9 @@
 <template>
   <div id="app" class="relative w-screen h-screen overflow-hidden font-sans">
-    <div @click="bolts = ['For testing purposes']" v-if="!bolts.length">
-      <NotConnected />
+    <div v-if="!bolts.length" class="fixed w-full h-full z-50">
+      <NotConnected @connected="connectedToBOLT" />
     </div>
-    <div v-else class="relative w-full h-full">
+    <div class="relative w-full h-full">
       <Index />
     </div>
   </div>
@@ -22,6 +22,11 @@ export default {
   components: {
     Index,
     NotConnected,
+  },
+  methods: {
+    connectedToBOLT(bolts) {
+      this.bolts = bolts;
+    },
   },
 };
 </script>
