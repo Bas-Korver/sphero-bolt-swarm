@@ -77,45 +77,21 @@
         </div>
 
         <div class="flex items-center mb-4">
-          <label for="hue" class="w-1/4 font-medium text-gray-800 mr-4"
-            >Hue</label
-          >
+          <label class="w-1/4 font-medium text-gray-800 mr-4">Hue</label>
 
-          <input
-            v-model="bolt.hue"
-            type="range"
-            id="hue"
-            name="hue"
-            class="w-full"
-          />
+          <Slider v-model="bolt.hue" class="w-full" />
         </div>
 
         <div class="flex items-center mb-4">
-          <label for="saturation" class="w-1/4 font-medium text-gray-800 mr-4"
-            >Saturation</label
-          >
+          <label class="w-1/4 font-medium text-gray-800 mr-4">Saturation</label>
 
-          <input
-            v-model="bolt.saturation"
-            type="range"
-            id="saturation"
-            name="saturation"
-            class="w-full"
-          />
+          <Slider v-model="bolt.saturation" class="w-full" />
         </div>
 
         <div class="flex items-center mb-4">
-          <label for="value" class="w-1/4 font-medium text-gray-800 mr-4"
-            >Value</label
-          >
+          <label class="w-1/4 font-medium text-gray-800 mr-4">Value</label>
 
-          <input
-            v-model="bolt.value"
-            type="range"
-            id="value"
-            name="value"
-            class="w-full"
-          />
+          <Slider @change="sendHSV" v-model="bolt.value" class="w-full" />
         </div>
 
         <div class="flex items-center">
@@ -154,10 +130,12 @@
 
 <script>
 import Loading from "@/components/others/Loading";
+import Slider from "@/components/others/Slider";
+import _ from "lodash";
 
 export default {
   name: "SettingsBoltModal",
-  components: { Loading },
+  components: { Slider, Loading },
   props: {
     name: String,
   },
@@ -244,6 +222,15 @@ export default {
           };
         });
     },
+    sendHSV: _.debounce(function () {
+      console.log("[!] Updating HSV data for preview...");
+
+      this.$http.post("/" + this.bolt.name + "/hsv", {
+        hue: this.hue,
+        saturation: this.saturation,
+        value: this.value,
+      });
+    }, 250),
     rgbToHex(red, green, blue) {
       return (
         "#" +
