@@ -63,10 +63,23 @@
               </option>
             </select>
 
-            <div v-if="errors" class="mb-4">
+            <div v-if="errors === true" class="mb-4">
               <p class="text-sm font-medium text-red-600">
                 Not able to connect to the selected BOLTs right now, please try
                 again later.
+              </p>
+            </div>
+
+            <div v-if="errors === 2" class="mb-4">
+              <p class="text-sm font-medium text-red-600">
+                Not able to connect to the selected BOLTs right now, are the 
+                selected BOLTs empty or too far away?
+              </p>
+            </div>
+
+            <div v-if="errors === 3" class="mb-4">
+              <p class="text-sm font-medium text-red-600">
+                Please check if you turned on your bluetooth.
               </p>
             </div>
 
@@ -124,12 +137,16 @@ export default {
 
       this.$http
         .post("connect", this.selectedBolts)
-        .then(() => {
+        .then((response) => {
+          if (typeof response.data === 'number') {
+            this.errors = response.data;
+            return
+          }
+          
           this.$emit("connected", this.selectedBolts);
         })
         .catch((error) => {
           this.errors = true;
-
           console.log(error);
         })
         .finally(() => {
