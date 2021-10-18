@@ -1,12 +1,13 @@
 <template>
-  <div class="absolute w-full bottom-10">
+  <div class="absolute w-full bottom-0 lg:bottom-10">
     <div
       class="
         container
+        max-w-6xl
         mx-auto
         grid grid-cols-4
         shadow-2xl
-        rounded-full
+        lg:rounded-full
         overflow-hidden
       "
     >
