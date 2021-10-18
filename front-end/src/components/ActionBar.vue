@@ -120,7 +120,7 @@
         </svg>
       </button>
       <button
-        @click="clickSettings()"
+        @click="clickSettings"
         class="
           group
           flex
@@ -170,7 +170,14 @@ export default {
   name: "ActionBar",
   methods: {
     clickCircle() {
-      alert("[!] Sending BOLTs to circle formation.");
+      this.$http
+        .get("circle")
+        .then(() => {
+          console.log("Making circle...");
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     },
     clickSquare() {
       alert("[!] Sending BOLTs to square formation.");

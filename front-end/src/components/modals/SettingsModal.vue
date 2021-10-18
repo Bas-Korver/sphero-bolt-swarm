@@ -54,12 +54,11 @@
               <div
                 class="h-4 w-4 rounded-full bg-red-500 mr-2"
                 :style="{
-                  'background-color': `rgb(${bolt.colors[0]}, ${bolt.colors[1]}, ${bolt.colors[2]})`,
+                  'background-color': `rgb(${bolt.color[0]}, ${bolt.color[1]}, ${bolt.color[2]})`,
                 }"
               ></div>
-              <h2 class="text-gray-700 font-medium">{{ bolt.name }}</h2>
+              <h2 class="text-gray-800 font-medium">{{ bolt.name }}</h2>
             </div>
-
             <div>
               <button @click="editBolt(bolt.name)" class="text-gray-700">
                 <svg
@@ -109,12 +108,7 @@ export default {
   },
   data() {
     return {
-      bolts: [
-        {
-          name: "SB-1D4E",
-          colors: [255, 0, 0],
-        },
-      ],
+      bolts: [],
       loading: {
         active: false,
         text: "",
@@ -124,14 +118,9 @@ export default {
   },
   methods: {
     editBolt(name) {
-      console.log(name);
-
-      // this.$modal.hide("settings");
-
       this.$modal.show("settings-" + name);
     },
     loadBolts() {
-      console.log("[!] Loading BOLTs...");
       this.loading = {
         active: true,
         text: "Fetching available BOLTs...",
@@ -140,9 +129,7 @@ export default {
       this.$http
         .get("/")
         .then((response) => {
-          // TODO: Handle response.
-
-          console.log(response);
+          this.bolts = response.data;
         })
         .catch((error) => {
           this.errors = true;

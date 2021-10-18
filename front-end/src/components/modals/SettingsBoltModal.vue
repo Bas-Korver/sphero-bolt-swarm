@@ -164,12 +164,12 @@ export default {
   data() {
     return {
       bolt: {
-        name: "",
-        address: "",
-        color: [],
-        hue: [],
-        saturation: [],
-        value: [],
+        // name: "",
+        // address: "",
+        // color: [],
+        // hue: [],
+        // saturation: [],
+        // value: [],
       },
       loading: {
         active: false,
@@ -186,9 +186,9 @@ export default {
       };
 
       this.$http
-        .get("/")
+        .get("/" + this.name)
         .then((response) => {
-          // TODO: Handle response.
+          this.bolt = response.data;
 
           console.log(response);
         })
@@ -211,12 +211,10 @@ export default {
 
       this.$http
         .post("/" + this.bolt.name)
-        .then((response) => {
-          // TODO: Handle response.
-
-          console.log(response);
-
+        .then(() => {
           this.$emit("update");
+
+          this.$modal.hide("settings-" + this.name)
         })
         .catch((error) => {
           this.errors = true;

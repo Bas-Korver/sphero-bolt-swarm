@@ -1,20 +1,103 @@
 from __future__ import annotations
 from sphero.sphero_bolt import SpheroBolt
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, jsonify, request, abort
 import numpy as np
 from cv2 import cv2
 from typing import List
 import json
 import asyncio
+import helper
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 
-# CAPTURE = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+# TODO: used for debugging
+CORS(app)
+
+CAPTURE = None
 BOLTS = []
 
 
+@app.route('/bolts/')
+def getConnectedBolts():
+    bolts = []
+
+    for bolt in BOLTS:
+        bolts.append({
+            'name': bolt.name,
+            'address': bolt.address,
+            'color': bolt.color,
+            'low_hsv': bolt.low_hsv,
+            'high_hsv': bolt.high_hsv
+        })
+
+    return jsonify(bolts)
+
+
+@app.route('/bolts/<name>')
+def getBolt(name):
+    for bolt in BOLTS:
+        if bolt.name == name:
+            return {
+                'name': bolt.name,
+                'address': bolt.address,
+                'color': bolt.color,
+                'low_hsv': bolt.low_hsv,
+                'high_hsv': bolt.high_hsv
+            }
+
+    return abort(404)
+
+
+@app.route('/bolts/available')
+def getAvailableBolts():
+    return jsonify(get_json_data("bolt_addresses.json"))
+
+
+@app.route('/bolts/connect', methods=["POST"])
+async def connectBolts():
+    global BOLTS
+
+    bolt_names = request.get_json()
+
+    BOLTS = []
+    for bolt_name in bolt_names:
+        print(f"[!] Connecting with BOLT {bolt_name}")
+
+        bolt = await connectBolt(bolt_name)
+
+        await bolt.connect()
+        await bolt.resetYaw()
+        await bolt.wake()
+
+        BOLTS.append(bolt)
+
+    return jsonify({"Status": "Success"})
+
+
+@app.route("/bolts/circle")
+async def makeCircle():
+    global CAPTURE
+
+    print("[!] Sending BOLTs to circle formation.")
+
+    coordinates = helper.getCircleCoordinates((320, 240), 175, len(BOLTS))
+    print(f"Coordinates: { len(coordinates) }")
+
+    for i in range(0, len(coordinates)):
+        print(f"[!] Sending BOLTs to {i} coordinates.")
+        coordinates = [coordinates[-1]] + coordinates[:-1]
+
+        await helper.sendToCoordinates(BOLTS, coordinates, CAPTURE)
+
+    print("[!] Completed circle formation.")
+    return jsonify({"Status": "Completed"})
+
+
 def video():
+    global CAPTURE
     CAPTURE = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+
     while CAPTURE.isOpened():
         # Capture frame-by-frame
         ret, img = CAPTURE.read()
@@ -86,19 +169,19 @@ def colorVideoForBolt(bolt):
             break
 
 
-@app.route('/connect')
-async def connectBolts():
-    global BOLTS
-
-    BOLTS = [await connectBolt("SB-D4A1"), await connectBolt("SB-E9BE"), await connectBolt("SB-67EA"),
-             await connectBolt("SB-BD23"), await connectBolt("SB-B198"), await connectBolt("SB-4D1E")]
-
-    for bolt in BOLTS:
-        await bolt.connect()
-        await bolt.resetYaw()
-        await bolt.wake()
-
-    return f"BOLTs successfully connected! {BOLTS}"
+# @app.route('/connect')
+# async def connectBolts():
+#     global BOLTS
+#
+#     BOLTS = [await connectBolt("SB-D4A1"), await connectBolt("SB-E9BE"), await connectBolt("SB-67EA"),
+#              await connectBolt("SB-BD23"), await connectBolt("SB-B198"), await connectBolt("SB-4D1E")]
+#
+#     for bolt in BOLTS:
+#         await bolt.connect()
+#         await bolt.resetYaw()
+#         await bolt.wake()
+#
+#     return f"BOLTs successfully connected! {BOLTS}"
 
 
 def get_json_data(file: str) -> List[dict[str, str]]:

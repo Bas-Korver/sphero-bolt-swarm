@@ -8,7 +8,7 @@ import numpy as np
 from cv2 import cv2
 from typing import List
 
-CAP = None
+# CAP = None
 CURRENT_COORDINATES = {}
 
 
@@ -79,6 +79,8 @@ def findDirection(_point_a, _point_b):
 
 
 def getCircleCoordinates(_center=(0, 0), _r=10, _n=10):
+    if _n < 4:
+        _n = 4
     return [
         [
             _center[0] + (math.cos(2 * math.pi / _n * x) * _r),  # x
@@ -86,8 +88,7 @@ def getCircleCoordinates(_center=(0, 0), _r=10, _n=10):
         ] for x in range(0, _n)]
 
 
-async def sendToCoordinates(bolts, coordinates):
-    global CURRENT_COORDINATES
+async def sendToCoordinates(bolts, coordinates, CAPTURE):
     global CURRENT_COORDINATES
 
     threads = []
@@ -100,7 +101,7 @@ async def sendToCoordinates(bolts, coordinates):
         if i >= len(coordinates):
             break
 
-        thread = threading.Thread(target=asyncio.run, args=(sendToCoordinate(bolts[i], coordinates[i]),))
+        thread = threading.Thread(target=asyncio.run, args=(sendToCoordinate(bolts[i], coordinates[i], CAPTURE),))
         thread.start()
         threads.append(thread)
 
@@ -113,12 +114,12 @@ async def sendToCoordinates(bolts, coordinates):
         await bolt.setBackLEDColor(255, 0, 0)
 
 
-async def sendToCoordinate(bolt, coordinate):
-    global CAP, CURRENT_COORDINATES
+async def sendToCoordinate(bolt, coordinate, CAPTURE):
+    global CURRENT_COORDINATES
 
     print(f"[!] Sending bolt {bolt.address} to X: {coordinate[0]}, Y: {coordinate[1]}")
 
-    if CAP is None or not CAP.isOpened():
+    if CAPTURE is None or not CAPTURE.isOpened():
         print("[Error] Could not open webcam.")
         return
 
@@ -128,8 +129,8 @@ async def sendToCoordinate(bolt, coordinate):
     }
 
     correct_coordinate = False
-    while CAP.isOpened() and not correct_coordinate:
-        ret, main_frame = CAP.read()
+    while CAPTURE.isOpened() and not correct_coordinate:
+        ret, main_frame = CAPTURE.read()
 
         cv2.circle(main_frame, (int(coordinate[0]), int(coordinate[1])), 5, (0, 0, 255), 2)
         hsv_frame = cv2.medianBlur(cv2.cvtColor(main_frame, cv2.COLOR_BGR2HSV), 9)
@@ -178,47 +179,42 @@ async def connectBolt(name):
                       bolt_json_data['high_hsv'])
 
 
-async def run():
-    global CAP
-
-    print("[!] Starting Program")
-
-    # Color bolts:
-    # SB-B198: Red
-    # SB-D4A1: Purple
-    # SB-67EA: Green
-    # SB-BD23: Blue
-    # SB-E9BE: Gold
-    # SB-4D1E: Yellow
-
-    # bolts = [await connectBolt("SB-B198"), await connectBolt("SB-D4A1"), await connectBolt("SB-67EA"),
-    #          await connectBolt("SB-BD23"), await connectBolt("SB-5D9D"), await connectBolt("SB-E9BE")]
-    bolts = [await connectBolt("SB-D4A1"), await connectBolt("SB-E9BE"), await connectBolt("SB-67EA"),
-             await connectBolt("SB-BD23"), await connectBolt("SB-B198"), await connectBolt("SB-4D1E")]
-    for bolt in bolts:
-        await bolt.connect()
-        await bolt.resetYaw()
-        await bolt.wake()
-
-    print("[!] Starting camera, please wait a few moments...")
-    CAP = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-
-    thread = threading.Thread(target=asyncio.run, args=(viewMovement(),))
-    thread.start()
-
-    coordinates = getCircleCoordinates((320, 240), 175, 6)
-    for i in range(0, 6):
-        coordinates = [coordinates[-1]] + coordinates[:-1]
-
-        await sendToCoordinates(bolts, coordinates)
-
-        await asyncio.sleep(1)
-
-    print("[!] Program completed!")
-
-    thread.join()
-
-
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(run())
+# async def run():
+#     global CAP
+#
+#     print("[!] Starting Program")
+#
+#     # Color bolts:
+#     # SB-B198: Red
+#     # SB-D4A1: Purple
+#     # SB-67EA: Green
+#     # SB-BD23: Blue
+#     # SB-E9BE: Gold
+#     # SB-4D1E: Yellow
+#
+#     # bolts = [await connectBolt("SB-B198"), await connectBolt("SB-D4A1"), await connectBolt("SB-67EA"),
+#     #          await connectBolt("SB-BD23"), await connectBolt("SB-5D9D"), await connectBolt("SB-E9BE")]
+#     bolts = [await connectBolt("SB-D4A1"), await connectBolt("SB-E9BE"), await connectBolt("SB-67EA"),
+#              await connectBolt("SB-BD23"), await connectBolt("SB-B198"), await connectBolt("SB-4D1E")]
+#     for bolt in bolts:
+#         await bolt.connect()
+#         await bolt.resetYaw()
+#         await bolt.wake()
+#
+#     print("[!] Starting camera, please wait a few moments...")
+#     CAP = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+#
+#     thread = threading.Thread(target=asyncio.run, args=(viewMovement(),))
+#     thread.start()
+#
+#     coordinates = getCircleCoordinates((320, 240), 175, 6)
+#     for i in range(0, 6):
+#         coordinates = [coordinates[-1]] + coordinates[:-1]
+#
+#         await sendToCoordinates(bolts, coordinates)
+#
+#         await asyncio.sleep(1)
+#
+#     print("[!] Program completed!")
+#
+#     thread.join()

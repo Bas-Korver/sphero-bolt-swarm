@@ -4,7 +4,7 @@ import axios from "axios";
 import VModal from "vue-js-modal";
 import "./assets/tailwind.css";
 
-axios.defaults.baseURL = "/bolts/";
+axios.defaults.baseURL = "http://127.0.0.1:5000/bolts/";
 Vue.prototype.$http = axios;
 
 Vue.config.productionTip = false;

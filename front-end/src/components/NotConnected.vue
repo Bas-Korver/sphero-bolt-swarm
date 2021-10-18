@@ -52,8 +52,14 @@
               id="bolts"
               multiple
             >
-              <option v-for="bolt in availableBolts" :key="bolt" :value="bolt">
-                {{ bolt }}
+              <option
+                v-for="bolt in availableBolts"
+                :key="bolt.name"
+                :value="bolt.name"
+                class="flex"
+              >
+                <div class="h-4 w-4 rounded-full bg-red-500 ml-2"></div>
+                <p>{{ bolt.name }}</p>
               </option>
             </select>
 
@@ -100,7 +106,7 @@ export default {
   },
   data() {
     return {
-      availableBolts: ["SB-TEST", "SB-TEST_2"],
+      availableBolts: [],
       selectedBolts: [],
       loading: {
         active: false,
@@ -118,19 +124,13 @@ export default {
 
       this.$http
         .post("connect", this.selectedBolts)
-        .then((response) => {
-          // TODO: Handle response
-
-          console.log(response);
-
+        .then(() => {
           this.$emit("connected", this.selectedBolts);
         })
         .catch((error) => {
           this.errors = true;
-          console.log(error);
 
-          // TODO: Remove emit when correct requests are added to application.
-          this.$emit("connected", this.selectedBolts);
+          console.log(error);
         })
         .finally(() => {
           this.loading = {
@@ -149,12 +149,11 @@ export default {
     this.$http
       .get("available")
       .then((response) => {
-        // TODO: Handle response.
-
-        console.log(response);
+        this.availableBolts = response.data;
       })
       .catch((error) => {
         this.errors = true;
+
         console.log(error);
       })
       .finally(() => {

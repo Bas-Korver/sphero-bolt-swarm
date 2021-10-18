@@ -1,9 +1,10 @@
 <template>
   <div class="w-full h-full">
     <img
-      src=""
+      src="http://127.0.0.1:5000/feed"
       alt="Webcam feed"
-      class="w-full h-full bg-gray-200"
+      class="fixed left-1/2 h-full bg-gray-200"
+      style="transform: translateX(-50%)"
       draggable="false"
     />
 
