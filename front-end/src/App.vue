@@ -48,8 +48,6 @@ export default {
     },
   },
   mounted() {
-    console.log("Checking if already connected to any BOLTs...");
-
     this.loading = {
       active: true,
       text: "Fetching connected BOLTs...",

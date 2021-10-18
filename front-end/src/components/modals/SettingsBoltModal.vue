@@ -163,14 +163,7 @@ export default {
   },
   data() {
     return {
-      bolt: {
-        // name: "",
-        // address: "",
-        // color: [],
-        // hue: [],
-        // saturation: [],
-        // value: [],
-      },
+      bolt: {},
       loading: {
         active: false,
         text: "",
@@ -188,7 +181,18 @@ export default {
       this.$http
         .get("/" + this.name)
         .then((response) => {
-          this.bolt = response.data;
+          this.bolt = {
+            name: response.data.name,
+            address: response.data.address,
+            color: this.rgbToHex(
+              response.data.color[0],
+              response.data.color[1],
+              response.data.color[2]
+            ),
+            hue: [response.data.low_hsv[0], response.data.high_hsv[0]],
+            saturation: [response.data.low_hsv[1], response.data.high_hsv[1]],
+            value: [response.data.low_hsv[2], response.data.high_hsv[2]],
+          };
 
           console.log(response);
         })
@@ -210,11 +214,23 @@ export default {
       };
 
       this.$http
-        .post("/" + this.bolt.name)
+        .post("/" + this.bolt.name, {
+          color: this.hexToRGB(this.bolt.color),
+          low_hsv: [
+            this.bolt.hue[0],
+            this.bolt.saturation[0],
+            this.bolt.value[0],
+          ],
+          high_hsv: [
+            this.bolt.hue[1],
+            this.bolt.saturation[1],
+            this.bolt.value[1],
+          ],
+        })
         .then(() => {
           this.$emit("update");
 
-          this.$modal.hide("settings-" + this.name)
+          this.$modal.hide("settings-" + this.name);
         })
         .catch((error) => {
           this.errors = true;
@@ -227,6 +243,22 @@ export default {
             text: "",
           };
         });
+    },
+    rgbToHex(red, green, blue) {
+      return (
+        "#" +
+        ((1 << 24) + (red << 16) + (green << 8) + blue).toString(16).slice(1)
+      );
+    },
+    hexToRGB(hex) {
+      let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result
+        ? {
+            red: parseInt(result[1], 16),
+            green: parseInt(result[2], 16),
+            blue: parseInt(result[3], 16),
+          }
+        : null;
     },
   },
 };
