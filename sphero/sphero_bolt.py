@@ -37,24 +37,6 @@ class SpheroBolt:
         """
         Connects to a Sphero Bolt of a specified MAC address if it can find it.
         """
-        # connect_tries = 0
-        # tries = 10
-        # while connect_tries < tries:
-        #     connect_tries += 1
-        #     try:
-        #         self.client = BleakClient(self.address)
-        #         await self.client.connect()
-        #         break
-        #     except (BleakError, TimeoutError) as e:
-        #         if connect_tries == tries:
-        #             print(f"[ERROR] : {e}")
-        #             return 0
-        #     except Exception as e:
-        #         error = str(e)
-        #         if 'HRESULT: 0x800710DF' in error:
-        #             print('Uw bluetooth staat niet aan', '\n')
-        #             # raise CustomError
-        #             return 1
 
         self.client = BleakClient(self.address)
         await self.client.connect()

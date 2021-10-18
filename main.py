@@ -82,6 +82,8 @@ async def connectBolts():
                 if 'HRESULT: 0x800710DF' in error:
                     print('Uw bluetooth staat niet aan', '\n')
                     return '3'
+                else:
+                    raise e
 
         await bolt.resetYaw()
         await bolt.wake()
