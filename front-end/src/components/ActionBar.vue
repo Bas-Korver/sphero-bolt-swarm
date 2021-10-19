@@ -162,16 +162,20 @@
         </svg>
       </button>
     </div>
+
+    <SettingsModal />
   </div>
 </template>
 
 <script>
+import SettingsModal from "./modals/SettingsModal";
 export default {
   name: "ActionBar",
+  components: {SettingsModal},
   methods: {
     clickCircle() {
       this.$http
-        .get("circle")
+        .get("actions/circle")
         .then(() => {
           console.log("Making circle...");
         })

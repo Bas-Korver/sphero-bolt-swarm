@@ -2,7 +2,7 @@
   <modal
     @before-open="loadSettings"
     :name="'settings-' + name"
-    width="600px"
+    width="75%"
     height="auto"
     classes="px-8 py-6 rounded-lg"
   >
@@ -31,78 +31,88 @@
           later.
         </p>
       </div>
-      <form v-else @submit="sendForm" action="/" method="POST">
-        <div class="flex items-center mb-4">
-          <label for="name" class="w-1/4 font-medium text-gray-800 mr-4"
-            >Name</label
-          >
+      <form
+        v-else
+        @submit="sendForm"
+        action="/"
+        method="POST"
+      >
+        <div class="w-full grid grid-cols-2 gap-x-5 mb-4">
+          <div>
+            <div class="flex items-center mb-4">
+              <label for="name" class="w-1/4 font-medium text-gray-800 mr-4"
+                >Name</label
+              >
 
-          <input
-            v-model="bolt.name"
-            type="text"
-            id="name"
-            name="name"
-            class="w-full"
-            disabled
-          />
-        </div>
-
-        <div class="flex items-center mb-4">
-          <label for="address" class="w-1/4 font-medium text-gray-800 mr-4"
-            >MAC-address</label
-          >
-
-          <input
-            v-model="bolt.address"
-            type="text"
-            id="address"
-            name="address"
-            class="w-full"
-            disabled
-          />
-        </div>
-
-        <div class="flex items-center mb-4">
-          <label for="color" class="w-1/4 font-medium text-gray-800 mr-4"
-            >Color</label
-          >
-
-          <input
-            v-model="bolt.color"
-            type="color"
-            id="color"
-            name="color"
-            class="w-full"
-          />
-        </div>
-
-        <div class="flex items-center mb-4">
-          <label class="w-1/4 font-medium text-gray-800 mr-4">Hue</label>
-
-          <Slider v-model="bolt.hue" class="w-full" />
-        </div>
-
-        <div class="flex items-center mb-4">
-          <label class="w-1/4 font-medium text-gray-800 mr-4">Saturation</label>
-
-          <Slider v-model="bolt.saturation" class="w-full" />
-        </div>
-
-        <div class="flex items-center mb-4">
-          <label class="w-1/4 font-medium text-gray-800 mr-4">Value</label>
-
-          <Slider @change="sendHSV" v-model="bolt.value" class="w-full" />
-        </div>
-
-        <div class="flex items-center">
-          <div class="w-1/4 mr-4"></div>
-          <div class="w-full">
-            <div v-if="errors" class="mb-4">
-              <p class="text-sm font-medium text-red-600">
-                Not able to save the changes made right now, please try again
-                later.
-              </p>
+              <input
+                v-model="bolt.name"
+                type="text"
+                id="name"
+                name="name"
+                class="w-full"
+                disabled
+              />
             </div>
+
+            <div class="flex items-center mb-4">
+              <label for="address" class="w-1/4 font-medium text-gray-800 mr-4"
+                >MAC-address</label
+              >
+
+              <input
+                v-model="bolt.address"
+                type="text"
+                id="address"
+                name="address"
+                class="w-full"
+                disabled
+              />
+            </div>
+
+            <div class="flex items-center mb-4">
+              <label for="color" class="w-1/4 font-medium text-gray-800 mr-4"
+                >Color</label
+              >
+
+              <input
+                v-model="bolt.color"
+                type="color"
+                id="color"
+                name="color"
+                class="w-full"
+              />
+            </div>
+          </div>
+          <div>
+            <img
+              :src="`http://127.0.0.1:5000/bolts/${bolt.name}/feed`"
+              :alt="`HSV preview feed for ${bolt.name}`"
+              class="w-full bg-gray-200 mb-4"
+            />
+
+            <div class="flex items-center mb-4">
+              <label class="w-1/4 font-medium text-gray-800 mr-4">Hue</label>
+
+              <Slider @change="sendHSV" v-model="bolt.hue" class="w-full" />
+            </div>
+
+            <div class="flex items-center mb-4">
+              <label class="w-1/4 font-medium text-gray-800 mr-4"
+                >Saturation</label
+              >
+
+              <Slider @change="sendHSV" v-model="bolt.saturation" class="w-full" />
+            </div>
+
+            <div class="flex items-center mb-4">
+              <label class="w-1/4 font-medium text-gray-800 mr-4">Value</label>
+
+              <Slider @change="sendHSV" v-model="bolt.value" class="w-full" />
+            </div>
+          </div>
+        </div>
+        <div class="w-full">
+          <div class="flex flex-row-reverse w-full justify-between items-center">
             <button
               type="submit"
               class="
@@ -121,6 +131,12 @@
             >
               Save
             </button>
+            <div v-if="errors">
+              <p class="text-sm font-medium text-red-600">
+                Not able to save the changes made right now, please try again
+                later.
+              </p>
+            </div>
           </div>
         </div>
       </form>

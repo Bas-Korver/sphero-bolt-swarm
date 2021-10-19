@@ -15,7 +15,7 @@
       min="0"
       max="255"
       v-model="minValue"
-      @input="onInput"
+      @input="onInputMin"
     />
 
     <input
@@ -23,7 +23,7 @@
       min="0"
       max="255"
       v-model="maxValue"
-      @input="onInput"
+      @input="onInputMax"
     />
   </div>
 </template>
@@ -39,13 +39,21 @@ export default {
   },
   props: ["value"],
   methods: {
-    onInput() {
+    onInputMin() {
       if (parseInt(this.minValue) > parseInt(this.maxValue)) {
         this.minValue = this.maxValue;
       }
+
+      this.onInput();
+    },
+    onInputMax() {
       if (parseInt(this.maxValue) < parseInt(this.minValue)) {
         this.maxValue = this.minValue;
       }
+
+      this.onInput();
+    },
+    onInput() {
       this.$emit("input", [parseInt(this.minValue), parseInt(this.maxValue)]);
       this.$emit("change");
     },
