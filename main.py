@@ -1,12 +1,14 @@
 from __future__ import annotations
+from http import HTTPStatus
 from sphero.sphero_bolt import SpheroBolt
 from flask import Flask, render_template, Response, jsonify, request, abort
 import numpy as np
 from cv2 import cv2
-from typing import List
+from typing import List, Type
 import json
 import helper
 from flask_cors import CORS, cross_origin
+from bleak import BleakError
 
 app = Flask(__name__)
 
@@ -76,8 +78,30 @@ async def connectBolts():
         print(f"[!] Connecting with BOLT {bolt_name}")
 
         bolt = await connectBolt(bolt_name)
+        connect_tries = 0
+        tries = 10
+        while connect_tries < tries:
+            connect_tries += 1
+            try:
+                error = await bolt.connect()
+                break
+            except (BleakError, TimeoutError) as e:
+                if connect_tries == tries:
+                    print(f"[ERROR] : {e}")
+                    return Response('Not able to connect to the selected '
+                                    'BOLTs right now, are the selected BOLTs '
+                                    'empty or too far away?',
+                                    status=500)
+            except Exception as e:
+                error = str(e)
+                if 'HRESULT: 0x800710DF' in error:
+                    print('Uw bluetooth staat niet aan', '\n')
+                    return Response('Please check if you turned on '
+                                    'your bluetooth.',
+                                    status=500)
+                else:
+                    raise e
 
-        await bolt.connect()
         await bolt.resetYaw()
         await bolt.wake()
 

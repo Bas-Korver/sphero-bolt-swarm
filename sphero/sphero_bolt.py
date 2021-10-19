@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 from sphero import sphero_constants
 from bleak import BleakClient, BleakError
 
+class CustomError(Exception):
+    pass
 
 class SpheroBolt:
     def __init__(self, address, name, color=[255, 255, 255], low_hsv=[0, 0, 0], high_hsv=[0, 0, 0]):
@@ -35,19 +37,9 @@ class SpheroBolt:
         """
         Connects to a Sphero Bolt of a specified MAC address if it can find it.
         """
-        connect_tries = 0
-        tries = 10
-        while connect_tries < tries:
-            connect_tries += 1
-            try:
-                self.client = BleakClient(self.address)
-                await self.client.connect()
-                break
-            except (BleakError, TimeoutError) as e:
-                if connect_tries == tries:
-                    print(f"[ERROR] : {e}")
-                    return False
 
+        self.client = BleakClient(self.address)
+        await self.client.connect()
         print("Connected: {0}".format(self.client.is_connected))
 
         # cancel if not connected

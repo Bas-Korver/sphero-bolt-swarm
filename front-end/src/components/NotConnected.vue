@@ -63,10 +63,16 @@
               </option>
             </select>
 
-            <div v-if="errors" class="mb-4">
+            <div v-if="errors === true" class="mb-4">
               <p class="text-sm font-medium text-red-600">
                 Not able to connect to the selected BOLTs right now, please try
                 again later.
+              </p>
+            </div>
+
+            <div v-if="errors === 500" class="mb-4">
+              <p class="text-sm font-medium text-red-600">
+                {{this.errorMessage}}                
               </p>
             </div>
 
@@ -128,9 +134,16 @@ export default {
           this.$emit("connected", this.selectedBolts);
         })
         .catch((error) => {
-          this.errors = true;
+          console.log(error.response)
+          switch (error.response.status) {
+            case 500:
+              this.errors = error.response.status;
+              this.errorMessage = error.response.data;
+              break;
 
-          console.log(error);
+            default:
+              this.errors = true;
+          }
         })
         .finally(() => {
           this.loading = {
