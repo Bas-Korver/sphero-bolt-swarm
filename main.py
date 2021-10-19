@@ -14,6 +14,7 @@ CORS(app)
 
 CAPTURE = None
 BOLTS = []
+BOLTS_HSV_PREVIEW = {}
 
 
 @app.route('/bolts/')
@@ -47,6 +48,17 @@ def getBolt(name):
     return abort(404)
 
 
+@app.route('/bolts/<name>/feed')
+def getBoltHSVFeed(name):
+    global BOLTS_HSV_PREVIEW
+
+    for bolt in BOLTS:
+        if bolt.name == name:
+            return Response(video(BOLTS_HSV_PREVIEW[name]['low_hsv'], BOLTS_HSV_PREVIEW[name]['high_hsv']), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+    return abort(404)
+
+
 @app.route('/bolts/available')
 def getAvailableBolts():
     return jsonify(get_json_data("bolt_addresses.json"))
@@ -54,11 +66,12 @@ def getAvailableBolts():
 
 @app.route('/bolts/connect', methods=["POST"])
 async def connectBolts():
-    global BOLTS
+    global BOLTS, BOLTS_HSV_PREVIEW
 
     bolt_names = request.get_json()
 
     BOLTS = []
+    BOLTS_HSV_PREVIEW = {}
     for bolt_name in bolt_names:
         print(f"[!] Connecting with BOLT {bolt_name}")
 
@@ -69,6 +82,10 @@ async def connectBolts():
         await bolt.wake()
 
         BOLTS.append(bolt)
+        BOLTS_HSV_PREVIEW[bolt.name] = {
+            'low_hsv': bolt.low_hsv,
+            'high_hsv': bolt.high_hsv
+        }
 
     return jsonify({"Status": "Success"})
 
@@ -80,7 +97,7 @@ async def makeCircle():
     print("[!] Sending BOLTs to circle formation.")
 
     coordinates = helper.getCircleCoordinates((320, 240), 175, len(BOLTS))
-    print(f"Coordinates: { len(coordinates) }")
+    print(f"Coordinates: {len(coordinates)}")
 
     for i in range(0, len(coordinates)):
         print(f"[!] Sending BOLTs to {i} coordinates.")
@@ -102,16 +119,27 @@ async def makeSquare():
     print("[!] SQUARE")
 
 
-def video():
+def video(low_hsv=None, high_hsv=None):
     global CAPTURE
-    CAPTURE = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+
+    if CAPTURE is None:
+        CAPTURE = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
     while CAPTURE.isOpened():
-        # Capture frame-by-frame
         ret, img = CAPTURE.read()
         if ret:
             img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
             frame = cv2.imencode('.jpg', img)[1].tobytes()
+
+            if low_hsv and high_hsv:
+                hsv_frame = cv2.medianBlur(cv2.cvtColor(img, cv2.COLOR_BGR2HSV), 9)
+
+                mask = cv2.inRange(hsv_frame, np.array(low_hsv, np.uint8), np.array(high_hsv, np.uint8))
+
+                result = cv2.bitwise_and(img, img, mask=mask)
+                result_frame = cv2.imencode('.jpg', result)[1].tobytes()
+                yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + result_frame + b'\r\n'
+
             yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
         else:
             break

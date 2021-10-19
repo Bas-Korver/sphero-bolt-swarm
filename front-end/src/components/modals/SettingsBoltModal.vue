@@ -93,7 +93,7 @@
             <div class="flex items-center mb-4">
               <label class="w-1/4 font-medium text-gray-800 mr-4">Hue</label>
 
-              <Slider v-model="bolt.hue" class="w-full" />
+              <Slider @change="sendHSV" v-model="bolt.hue" class="w-full" />
             </div>
 
             <div class="flex items-center mb-4">
@@ -101,7 +101,7 @@
                 >Saturation</label
               >
 
-              <Slider v-model="bolt.saturation" class="w-full" />
+              <Slider @change="sendHSV" v-model="bolt.saturation" class="w-full" />
             </div>
 
             <div class="flex items-center mb-4">
