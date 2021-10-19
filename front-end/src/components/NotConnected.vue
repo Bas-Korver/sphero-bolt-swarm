@@ -70,14 +70,14 @@
               </p>
             </div>
 
-            <div v-if="errors === 2" class="mb-4">
+            <div v-if="errors === 520" class="mb-4">
               <p class="text-sm font-medium text-red-600">
-                Not able to connect to the selected BOLTs right now, are the 
+                Not able to connect to the selected BOLTs right now, are the
                 selected BOLTs empty or too far away?
               </p>
             </div>
 
-            <div v-if="errors === 3" class="mb-4">
+            <div v-if="errors === 521" class="mb-4">
               <p class="text-sm font-medium text-red-600">
                 Please check if you turned on your bluetooth.
               </p>
@@ -137,17 +137,22 @@ export default {
 
       this.$http
         .post("connect", this.selectedBolts)
-        .then((response) => {
-          if (typeof response.data === 'number') {
-            this.errors = response.data;
-            return
-          }
-          
+        .then(() => {
           this.$emit("connected", this.selectedBolts);
         })
         .catch((error) => {
-          this.errors = true;
-          console.log(error);
+          switch (error.response.status) {
+            case 520:
+              this.errors = error.response.status;
+              break;
+
+            case 521:
+              this.errors = error.response.status;
+              break;
+
+            default:
+              this.errors = true;
+          }
         })
         .finally(() => {
           this.loading = {

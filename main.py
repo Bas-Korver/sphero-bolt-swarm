@@ -76,12 +76,12 @@ async def connectBolts():
             except (BleakError, TimeoutError) as e:
                 if connect_tries == tries:
                     print(f"[ERROR] : {e}")
-                    return '2'
+                    return Response(status=520)
             except Exception as e:
                 error = str(e)
                 if 'HRESULT: 0x800710DF' in error:
                     print('Uw bluetooth staat niet aan', '\n')
-                    return '3'
+                    return Response(status=521)
                 else:
                     raise e
 
