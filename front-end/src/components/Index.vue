@@ -16,18 +16,15 @@
     />
 
     <ActionBar />
-    <SettingsModal />
   </div>
 </template>
 
 <script>
 import ActionBar from "./ActionBar.vue";
-import SettingsModal from "./modals/SettingsModal.vue";
 export default {
   name: "Index",
   components: {
     ActionBar,
-    SettingsModal,
   },
 };
 </script>

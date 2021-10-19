@@ -5,13 +5,11 @@ import numpy as np
 from cv2 import cv2
 from typing import List
 import json
-import asyncio
 import helper
 from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 
-# TODO: used for debugging
 CORS(app)
 
 CAPTURE = None
@@ -75,7 +73,7 @@ async def connectBolts():
     return jsonify({"Status": "Success"})
 
 
-@app.route("/bolts/circle")
+@app.route("/bolts/actions/circle")
 async def makeCircle():
     global CAPTURE
 
@@ -92,6 +90,16 @@ async def makeCircle():
 
     print("[!] Completed circle formation.")
     return jsonify({"Status": "Completed"})
+
+
+@app.route("/bolts/actions/triangle")
+async def makeTriangle():
+    print("[!] TRIANGLE")
+
+
+@app.route("/bolts/actions/square")
+async def makeSquare():
+    print("[!] SQUARE")
 
 
 def video():
