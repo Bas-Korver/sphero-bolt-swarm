@@ -75,6 +75,44 @@ async def connectBolts():
     return jsonify({"Status": "Success"})
 
 
+@app.route("/bolts/triangle")
+async def makeTriangle():
+    global CAPTURE
+
+    print("[!] Sending BOLTs to circle formation.")
+
+    coordinates = helper.getTriangleCoordinates((320, 240), 175, len(BOLTS))
+    print(f"Coordinates: { len(coordinates) }")
+
+    for i in range(0, len(coordinates)):
+        print(f"[!] Sending BOLTs to {i} coordinates.")
+        coordinates = [coordinates[-1]] + coordinates[:-1]
+
+        await helper.sendToCoordinates(BOLTS, coordinates, CAPTURE)
+
+    print("[!] Completed circle formation.")
+    return jsonify({"Status": "Completed"})
+
+
+@app.route("/bolts/square")
+async def makeSquare():
+    global CAPTURE
+
+    print("[!] Sending BOLTs to circle formation.")
+
+    coordinates = helper.getSquareCoordinates((320, 240), 175, len(BOLTS))
+    print(f"Coordinates: { len(coordinates) }")
+
+    for i in range(0, len(coordinates)):
+        print(f"[!] Sending BOLTs to {i} coordinates.")
+        coordinates = [coordinates[-1]] + coordinates[:-1]
+
+        await helper.sendToCoordinates(BOLTS, coordinates, CAPTURE)
+
+    print("[!] Completed circle formation.")
+    return jsonify({"Status": "Completed"})
+
+
 @app.route("/bolts/circle")
 async def makeCircle():
     global CAPTURE

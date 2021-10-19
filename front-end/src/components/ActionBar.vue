@@ -180,10 +180,24 @@ export default {
         });
     },
     clickSquare() {
-      alert("[!] Sending BOLTs to square formation.");
+      this.$http
+        .get("square")
+        .then(() => {
+          console.log("Making square...");
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     },
     clickTriangle() {
-      alert("[!] Sending BOLTs to triangle formation.");
+      this.$http
+        .get("triangle")
+        .then(() => {
+          console.log("Making triangle...");
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     },
     clickSettings() {
       this.$modal.show("settings");

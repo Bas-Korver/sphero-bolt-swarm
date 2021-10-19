@@ -77,6 +77,37 @@ def findDirection(_point_a, _point_b):
             degree += 90
     return degree
 
+#TODO: make it for 10 BOLTS
+def getSquareCoordinates(_center=(0, 0), _r=10, _n=10):
+    if _n < 4:
+        _n = 4
+    if _n == 4:
+        return [[_center[0] + _r, _center[1] - _r], [_center[0] + _r, _center[1] + _r],
+                [_center[0] - _r, _center[1] + _r], [_center[0] - _r, _center[1] - _r]]
+    elif 4 < _n <= 6:
+        return [[_center[0] + _r, _center[1] - _r], [_center[0] + _r, _center[1] + _r],
+                [_center[0] - _r, _center[1] + _r], [_center[0] - _r, _center[1] - _r],
+                [_center[0] + _r, _center[1]], [_center[0] - _r, _center[1]]]
+    elif 6 < _n <= 8:
+        return [[_center[0] + _r, _center[1] - _r], [_center[0] + _r, _center[1] + _r],
+                [_center[0] - _r, _center[1] + _r], [_center[0] - _r, _center[1] - _r],
+                [_center[0] + _r, _center[1]], [_center[0] - _r, _center[1]],
+                [_center[0], _center[1] + _r], [_center[0], _center[1] + _r]]
+
+
+def getTriangleCoordinates(_center=(0, 0), _r=10, _n=10):
+    if _n < 3:
+        _n = 3
+    if _n == 3:
+        return [[_center[0], _center[1] + _r], [_center[0] - _r/2, _center[1] - _r],
+                [_center[0] + _r/2, _center[1] - _r]]
+    elif 3 < _n >= 6:
+        return [[_center[0], _center[1] + _r], [_center[0] - _r / 2, _center[1] - _r],
+                [_center[0] + _r / 2, _center[1] - _r],
+                [(_center[0] + (_center[0] - _r / 2))/2, (_center[1] + _r + _center[1] - _r) / 2],
+                [(_center[0] + (_center[0] + _r / 2))/2, (_center[1] + _r + _center[1] - _r)/2],
+                [((_center[0] - _r / 2) + (_center[0] + _r / 2))/2, (_center[1] - _r + _center[1] - _r)/2]]
+
 
 def getCircleCoordinates(_center=(0, 0), _r=10, _n=10):
     if _n < 4:
