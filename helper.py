@@ -77,7 +77,8 @@ def findDirection(_point_a, _point_b):
             degree += 90
     return degree
 
-#TODO: make it for 10 BOLTS
+
+#TODO: make it for 10 BOLTS now max 8
 def getSquareCoordinates(_center=(0, 0), _r=10, _n=10):
     if _n < 4:
         _n = 4
@@ -95,6 +96,7 @@ def getSquareCoordinates(_center=(0, 0), _r=10, _n=10):
                 [_center[0], _center[1] + _r], [_center[0], _center[1] + _r]]
 
 
+#TODO: make it for 10 BOLTS now max 6
 def getTriangleCoordinates(_center=(0, 0), _r=10, _n=10):
     if _n < 3:
         _n = 3
@@ -102,11 +104,12 @@ def getTriangleCoordinates(_center=(0, 0), _r=10, _n=10):
         return [[_center[0], _center[1] + _r], [_center[0] - _r/2, _center[1] - _r],
                 [_center[0] + _r/2, _center[1] - _r]]
     elif 3 < _n >= 6:
-        return [[_center[0], _center[1] + _r], [_center[0] - _r / 2, _center[1] - _r],
+        return [[_center[0], _center[1] + _r],
+                [(_center[0] + (_center[0] - _r / 2)) / 2, (_center[1] + _r + _center[1] - _r) / 2],
+                [_center[0] - _r / 2, _center[1] - _r],
+                [((_center[0] - _r / 2) + (_center[0] + _r / 2)) / 2, (_center[1] - _r + _center[1] - _r) / 2],
                 [_center[0] + _r / 2, _center[1] - _r],
-                [(_center[0] + (_center[0] - _r / 2))/2, (_center[1] + _r + _center[1] - _r) / 2],
-                [(_center[0] + (_center[0] + _r / 2))/2, (_center[1] + _r + _center[1] - _r)/2],
-                [((_center[0] - _r / 2) + (_center[0] + _r / 2))/2, (_center[1] - _r + _center[1] - _r)/2]]
+                [(_center[0] + (_center[0] + _r / 2))/2, (_center[1] + _r + _center[1] - _r)/2]]
 
 
 def getCircleCoordinates(_center=(0, 0), _r=10, _n=10):
@@ -193,6 +196,7 @@ async def sendToCoordinate(bolt, coordinate, CAPTURE):
                 else:
                     await bolt.roll(35, int(direction))
 
+        #TODO: Get rid of this when done with testing
         cv2.imshow(f"Detection for {bolt.name}, coordinates: {coordinate}", main_frame)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -200,14 +204,14 @@ async def sendToCoordinate(bolt, coordinate, CAPTURE):
             cv2.destroyAllWindows()
 
 
-async def connectBolt(name):
-    addresses = get_json_data("bolt_addresses.json")
-
-    bolt_json_data = next(
-        item for item in addresses if item['name'] == name)
-
-    return SpheroBolt(bolt_json_data['address'], name, bolt_json_data['color'], bolt_json_data['low_hsv'],
-                      bolt_json_data['high_hsv'])
+# async def connectBolt(name):
+#     addresses = get_json_data("bolt_addresses.json")
+#
+#     bolt_json_data = next(
+#         item for item in addresses if item['name'] == name)
+#
+#     return SpheroBolt(bolt_json_data['address'], name, bolt_json_data['color'], bolt_json_data['low_hsv'],
+#                       bolt_json_data['high_hsv'])
 
 
 # async def run():
