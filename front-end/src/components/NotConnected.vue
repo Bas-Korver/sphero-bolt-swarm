@@ -70,16 +70,9 @@
               </p>
             </div>
 
-            <div v-if="errors === 520" class="mb-4">
+            <div v-if="errors === 500" class="mb-4">
               <p class="text-sm font-medium text-red-600">
-                Not able to connect to the selected BOLTs right now, are the
-                selected BOLTs empty or too far away?
-              </p>
-            </div>
-
-            <div v-if="errors === 521" class="mb-4">
-              <p class="text-sm font-medium text-red-600">
-                Please check if you turned on your bluetooth.
+                {{this.errorMessage}}                
               </p>
             </div>
 
@@ -141,13 +134,11 @@ export default {
           this.$emit("connected", this.selectedBolts);
         })
         .catch((error) => {
+          console.log(error.response)
           switch (error.response.status) {
-            case 520:
+            case 500:
               this.errors = error.response.status;
-              break;
-
-            case 521:
-              this.errors = error.response.status;
+              this.errorMessage = error.response.data;
               break;
 
             default:

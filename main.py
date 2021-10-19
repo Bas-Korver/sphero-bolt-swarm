@@ -1,4 +1,5 @@
 from __future__ import annotations
+from http import HTTPStatus
 from sphero.sphero_bolt import SpheroBolt
 from flask import Flask, render_template, Response, jsonify, request, abort
 import numpy as np
@@ -76,12 +77,17 @@ async def connectBolts():
             except (BleakError, TimeoutError) as e:
                 if connect_tries == tries:
                     print(f"[ERROR] : {e}")
-                    return Response(status=520)
+                    return Response('Not able to connect to the selected '
+                                    'BOLTs right now, are the selected BOLTs '
+                                    'empty or too far away?',
+                                    status=500)
             except Exception as e:
                 error = str(e)
                 if 'HRESULT: 0x800710DF' in error:
                     print('Uw bluetooth staat niet aan', '\n')
-                    return Response(status=521)
+                    return Response('Please check if you turned on '
+                                    'your bluetooth.',
+                                    status=500)
                 else:
                     raise e
 
