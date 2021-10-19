@@ -171,16 +171,6 @@ async def makeCircle():
     return jsonify({"Status": "Completed"})
 
 
-@app.route("/bolts/actions/triangle")
-async def makeTriangle():
-    print("[!] TRIANGLE")
-
-
-@app.route("/bolts/actions/square")
-async def makeSquare():
-    print("[!] SQUARE")
-
-
 def video(low_hsv=None, high_hsv=None):
     global CAPTURE
 
@@ -190,7 +180,7 @@ def video(low_hsv=None, high_hsv=None):
     while CAPTURE.isOpened():
         ret, img = CAPTURE.read()
         if ret:
-            img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
+            #img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
             frame = cv2.imencode('.jpg', img)[1].tobytes()
 
             if low_hsv and high_hsv:

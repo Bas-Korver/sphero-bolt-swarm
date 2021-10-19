@@ -185,7 +185,7 @@ export default {
     },
     clickSquare() {
       this.$http
-        .get("square")
+        .get("actions/square")
         .then(() => {
           console.log("Making square...");
         })
@@ -195,7 +195,7 @@ export default {
     },
     clickTriangle() {
       this.$http
-        .get("triangle")
+        .get("actions/triangle")
         .then(() => {
           console.log("Making triangle...");
         })
