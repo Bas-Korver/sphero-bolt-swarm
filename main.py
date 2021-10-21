@@ -9,6 +9,9 @@ import json
 import helper
 from flask_cors import CORS, cross_origin
 from bleak import BleakError
+from asyncio import TimeoutError
+import webbrowser
+import os
 
 app = Flask(__name__)
 
@@ -301,10 +304,15 @@ async def connectBolt(name):
 
     bolt_json_data = next(
         item for item in addresses if item['name'] == name)
-
+        
     return SpheroBolt(bolt_json_data['address'], name, bolt_json_data['color'], bolt_json_data['low_hsv'],
                       bolt_json_data['high_hsv'])
 
 
 if __name__ == "__main__":
-    app.run(host="", debug=True, use_reloader=True)
+    # The reloader has not yet run - open the browser
+    if not os.environ.get("WERKZEUG_RUN_MAIN"):
+        webbrowser.open_new('http://127.0.0.1:5000/')
+
+    # Otherwise, continue as normal
+    app.run(host="127.0.0.1", use_reloader=True)

@@ -7,5 +7,7 @@ module.exports = {
     });
   },
 
-  publicPath: "",
+  publicPath: './static/',
+  assetsDir: '../static',
+  outputDir: '../templates'
 };
