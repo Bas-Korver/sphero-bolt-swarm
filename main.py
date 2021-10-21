@@ -35,8 +35,8 @@ def getConnectedBolts():
     return jsonify(bolts)
 
 
-@app.route('/bolts/<name>')
-def getBolt(name):
+@app.route('/bolts/<name>', methods=["GET", "POST"])
+async def getBolt(name):
     if request.method == "GET":
         global BOLTS_HSV_PREVIEW
 
@@ -57,18 +57,32 @@ def getBolt(name):
 
         return abort(404)
     elif request.method == "POST":
-        print("[!] SAVING SETTINGS...")
-
         for bolt in BOLTS:
             if bolt.name == name:
-                data = get_json_data()
-                print(f"[!] DATA: {data}")
+                data = request.get_json()
 
                 bolt.color = data['color']
                 bolt.low_hsv = data['low_hsv']
                 bolt.high_hsv = data['high_hsv']
 
-                # TODO: Save to JSON file
+                await bolt.setMatrixLED(bolt.color[0], bolt.color[1], bolt.color[2])\
+
+                bolts_json = None
+                with open("bolt_addresses.json", "r") as file:
+                    bolts_json = json.load(file)
+                    for bolt_json in bolts_json:
+                        if bolt_json['name'] == bolt.name:
+                            bolt_json['color'] = bolt.color
+                            bolt_json['low_hsv'] = bolt.low_hsv
+                            bolt_json['high_hsv'] = bolt.high_hsv
+                            break
+
+                with open("bolt_addresses.json", "w") as file:
+                    json.dump(bolts_json, file)
+
+                return "Success"
+
+        return abort(404)
 
 
 @app.route('/bolts/<name>/feed')
@@ -77,26 +91,33 @@ def getBoltHSVFeed(name):
 
     for bolt in BOLTS:
         if bolt.name == name:
-            return Response(video(BOLTS_HSV_PREVIEW[name]['low_hsv'], BOLTS_HSV_PREVIEW[name]['high_hsv']), mimetype='multipart/x-mixed-replace; boundary=frame')
+            return Response(video(name), mimetype='multipart/x-mixed-replace; boundary=frame')
 
     return abort(404)
 
 
-@app.route('/bolts/<name>/hsv')
+@app.route('/bolts/<name>/hsv', methods=['POST'])
 def boltHSV(name):
     global BOLTS_HSV_PREVIEW
 
-    hsv_values = request.get_json()
+    data = request.get_json()
+
     for bolt in BOLTS:
         if bolt.name == name:
-            hue = hsv_values['hue']
-            saturation = hsv_values['saturation']
-            value = hsv_values['value']
+            print(f"[!] Name: {bolt.name}")
+
+            hue = data['hue']
+            saturation = data['saturation']
+            value = data['value']
 
             BOLTS_HSV_PREVIEW[bolt.name] = {
                 'low_hsv': [hue[0], saturation[0], value[0]],
                 'high_hsv': [hue[1], saturation[1], value[1]]
             }
+
+            print(BOLTS_HSV_PREVIEW)
+
+            return "Success"
 
     return abort(404)
 
@@ -211,7 +232,7 @@ async def makeCircle():
     return jsonify({"Status": "Completed"})
 
 
-def video(low_hsv=None, high_hsv=None):
+def video(bolt_name=None):
     global CAPTURE
 
     if CAPTURE is None:
@@ -220,10 +241,12 @@ def video(low_hsv=None, high_hsv=None):
     while CAPTURE.isOpened():
         ret, img = CAPTURE.read()
         if ret:
-            #img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
             frame = cv2.imencode('.jpg', img)[1].tobytes()
 
-            if low_hsv and high_hsv:
+            if bolt_name:
+                low_hsv = BOLTS_HSV_PREVIEW[bolt_name]['low_hsv']
+                high_hsv = BOLTS_HSV_PREVIEW[bolt_name]['high_hsv']
+
                 hsv_frame = cv2.medianBlur(cv2.cvtColor(img, cv2.COLOR_BGR2HSV), 9)
 
                 mask = cv2.inRange(hsv_frame, np.array(low_hsv, np.uint8), np.array(high_hsv, np.uint8))
@@ -256,62 +279,6 @@ def feed():
     return Response(video(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-# TODO: fix this week 8 V
-@app.route("/colors/<name>")
-def colorForBolt(name=None):
-    global BOLTS
-
-    if name is None:
-        return "Dit moet stoppen nu!!!!!!!!!!"
-
-    bolt = None
-    for bolt_x in BOLTS:
-        if bolt_x.name == name:
-            bolt = bolt_x
-            break
-
-    if bolt is None:
-        return f"Voer een geldige naam in! {BOLTS}"
-
-    return Response(colorVideoForBolt(bolt), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-def colorVideoForBolt(bolt):
-    global CAPTURE
-
-    ret, img = CAPTURE.read()
-    while CAPTURE.isOpened():
-        print("[!] Capture opened!")
-        ret, img = CAPTURE.read()
-        if ret:
-            hsv_frame = cv2.medianBlur(cv2.cvtColor(img, cv2.COLOR_BGR2HSV), 9)
-
-            lower = np.array(bolt.low_hsv, np.uint8)
-            upper = np.array(bolt.high_hsv, np.uint8)
-            mask = cv2.inRange(hsv_frame, lower, upper)
-            result = cv2.bitwise_and(img, img, mask=mask)
-
-            frame = cv2.imencode('.jpg', result)[1].tobytes()
-            yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
-        else:
-            break
-
-
-# @app.route('/connect')
-# async def connectBolts():
-#     global BOLTS
-#
-#     BOLTS = [await connectBolt("SB-D4A1"), await connectBolt("SB-E9BE"), await connectBolt("SB-67EA"),
-#              await connectBolt("SB-BD23"), await connectBolt("SB-B198"), await connectBolt("SB-4D1E")]
-#
-#     for bolt in BOLTS:
-#         await bolt.connect()
-#         await bolt.resetYaw()
-#         await bolt.wake()
-#
-#     return f"BOLTs successfully connected! {BOLTS}"
-
-
 def get_json_data(file: str) -> List[dict[str, str]]:
     """Reads json file and returns a list of dictionaries.
 
@@ -339,14 +306,5 @@ async def connectBolt(name):
                       bolt_json_data['high_hsv'])
 
 
-# async def run():
-#     global BOLTS
-#
-#     app.run(host="", debug=True, use_reloader=True)
-
-
 if __name__ == "__main__":
     app.run(host="", debug=True, use_reloader=True)
-
-    # loop = asyncio.get_event_loop()
-    # loop.run_until_complete(run())
