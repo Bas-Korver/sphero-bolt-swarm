@@ -48,7 +48,6 @@ async def viewMovement():
             cv2.circle(main_frame, (int(bolt.get('coordinate')[0]), int(bolt.get('coordinate')[1])), 5,
                        (int(bolt.get('color')[2]), int(bolt.get('color')[1]), int(bolt.get('color')[0])), 2)
 
-        # TODO: Middel point for testing (del later)
         cv2.circle(main_frame, (320, 240), 10, (255, 255, 255), 3)
 
         cv2.imshow("Movement Viewer", main_frame)
@@ -78,7 +77,6 @@ def findDirection(_point_a, _point_b):
     return degree
 
 
-#TODO: make it for 10 BOLTS now max 8
 def getSquareCoordinates(_center=(0, 0), _r=10, _n=10):
     if _n < 4:
         _n = 4
@@ -86,17 +84,22 @@ def getSquareCoordinates(_center=(0, 0), _r=10, _n=10):
         return [[_center[0] + _r, _center[1] - _r], [_center[0] + _r, _center[1] + _r],
                 [_center[0] - _r, _center[1] + _r], [_center[0] - _r, _center[1] - _r]]
     elif 4 < _n <= 6:
-        return [[_center[0] + _r, _center[1] - _r], [_center[0] + _r, _center[1] + _r],
-                [_center[0] - _r, _center[1] + _r], [_center[0] - _r, _center[1] - _r],
-                [_center[0] + _r, _center[1]], [_center[0] - _r, _center[1]]]
+        return [[_center[0] + _r, _center[1] - _r], [_center[0] + _r, _center[1]],
+                [_center[0] + _r, _center[1] + _r], [_center[0] - _r, _center[1] + _r],
+                [_center[0] - _r, _center[1]], [_center[0] - _r, _center[1] - _r]]
     elif 6 < _n <= 8:
-        return [[_center[0] + _r, _center[1] - _r], [_center[0] + _r, _center[1] + _r],
-                [_center[0] - _r, _center[1] + _r], [_center[0] - _r, _center[1] - _r],
-                [_center[0] + _r, _center[1]], [_center[0] - _r, _center[1]],
-                [_center[0], _center[1] + _r], [_center[0], _center[1] + _r]]
+        return [[_center[0] + _r, _center[1] - _r], [_center[0] + _r, _center[1]],
+                [_center[0] + _r, _center[1] + _r], [_center[0], _center[1] + _r],
+                [_center[0] - _r, _center[1] + _r], [_center[0] - _r, _center[1]],
+                [_center[0] - _r, _center[1] - _r], [_center[0], _center[1] - _r]]
+    elif 8 < _n <= 10:
+        return [[_center[0] + _r, _center[1] - _r], [_center[0] + _r, _center[1]],
+                [_center[0] + _r, _center[1] + _r], [_center[0] + _r* 0.5, _center[1] + _r],
+                [_center[0] - _r * 0.5, _center[1] + _r], [_center[0] - _r, _center[1] + _r], [_center[0] - _r, _center[1]],
+                [_center[0] - _r, _center[1] - _r], [_center[0] - _r * 0.5, _center[1] - _r],
+                [_center[0] + _r * 0.5, _center[1] - _r]]
 
 
-#TODO: make it for 10 BOLTS now max 6
 def getTriangleCoordinates(_center=(0, 0), _r=10, _n=10):
     if _n < 3:
         _n = 3
@@ -110,6 +113,17 @@ def getTriangleCoordinates(_center=(0, 0), _r=10, _n=10):
                 [((_center[0] - _r / 2) + (_center[0] + _r / 2)) / 2, (_center[1] - _r + _center[1] - _r) / 2],
                 [_center[0] + _r / 2, _center[1] - _r],
                 [(_center[0] + (_center[0] + _r / 2))/2, (_center[1] + _r + _center[1] - _r)/2]]
+    elif 6 < _n <= 10:
+        return [[_center[0], _center[1] + _r*1.5,
+                [_center[0], _center[1] + _r*0.75],
+                [(_center[0] + (_center[0] - _r / 2)) / 2, (_center[1] + _r + _center[1] - _r) / 2],
+                [_center[0], _center[1]],
+                [_center[0] - _r, _center[1] - _r],
+                [_center[0] - _r / 2, _center[1] - _r],
+                [((_center[0] - _r / 2) + (_center[0] + _r / 2)) / 2, (_center[1] - _r + _center[1] - _r) / 2],
+                [_center[0] + _r / 2, _center[1] - _r],
+                [_center[0] + _r, _center[1] - _r],
+                [(_center[0] + (_center[0] + _r / 2))/2, (_center[1] + _r + _center[1] - _r)/2]]]
 
 
 def getCircleCoordinates(_center=(0, 0), _r=10, _n=10):
@@ -196,60 +210,8 @@ async def sendToCoordinate(bolt, coordinate, CAPTURE):
                 else:
                     await bolt.roll(35, int(direction))
 
-        #TODO: Get rid of this when done with testing
-        cv2.imshow(f"Detection for {bolt.name}, coordinates: {coordinate}", main_frame)
+        #cv2.imshow(f"Detection for {bolt.name}, coordinates: {coordinate}", main_frame)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
             CAP.release()
             cv2.destroyAllWindows()
-
-
-# async def connectBolt(name):
-#     addresses = get_json_data("bolt_addresses.json")
-#
-#     bolt_json_data = next(
-#         item for item in addresses if item['name'] == name)
-#
-#     return SpheroBolt(bolt_json_data['address'], name, bolt_json_data['color'], bolt_json_data['low_hsv'],
-#                       bolt_json_data['high_hsv'])
-
-
-# async def run():
-#     global CAP
-#
-#     print("[!] Starting Program")
-#
-#     # Color bolts:
-#     # SB-B198: Red
-#     # SB-D4A1: Purple
-#     # SB-67EA: Green
-#     # SB-BD23: Blue
-#     # SB-E9BE: Gold
-#     # SB-4D1E: Yellow
-#
-#     # bolts = [await connectBolt("SB-B198"), await connectBolt("SB-D4A1"), await connectBolt("SB-67EA"),
-#     #          await connectBolt("SB-BD23"), await connectBolt("SB-5D9D"), await connectBolt("SB-E9BE")]
-#     bolts = [await connectBolt("SB-D4A1"), await connectBolt("SB-E9BE"), await connectBolt("SB-67EA"),
-#              await connectBolt("SB-BD23"), await connectBolt("SB-B198"), await connectBolt("SB-4D1E")]
-#     for bolt in bolts:
-#         await bolt.connect()
-#         await bolt.resetYaw()
-#         await bolt.wake()
-#
-#     print("[!] Starting camera, please wait a few moments...")
-#     CAP = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-#
-#     thread = threading.Thread(target=asyncio.run, args=(viewMovement(),))
-#     thread.start()
-#
-#     coordinates = getCircleCoordinates((320, 240), 175, 6)
-#     for i in range(0, 6):
-#         coordinates = [coordinates[-1]] + coordinates[:-1]
-#
-#         await sendToCoordinates(bolts, coordinates)
-#
-#         await asyncio.sleep(1)
-#
-#     print("[!] Program completed!")
-#
-#     thread.join()

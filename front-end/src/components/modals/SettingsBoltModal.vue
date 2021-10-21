@@ -187,8 +187,6 @@ export default {
             saturation: [response.data.low_hsv[1], response.data.high_hsv[1]],
             value: [response.data.low_hsv[2], response.data.high_hsv[2]],
           };
-
-          console.log(response);
         })
         .catch((error) => {
           this.errors = true;
@@ -242,9 +240,9 @@ export default {
       console.log("[!] Updating HSV data for preview...");
 
       this.$http.post("/" + this.bolt.name + "/hsv", {
-        hue: this.hue,
-        saturation: this.saturation,
-        value: this.value,
+        hue: this.bolt.hue,
+        saturation: this.bolt.saturation,
+        value: this.bolt.value,
       });
     }, 250),
     rgbToHex(red, green, blue) {
