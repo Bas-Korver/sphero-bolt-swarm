@@ -37,17 +37,38 @@ def getConnectedBolts():
 
 @app.route('/bolts/<name>')
 def getBolt(name):
-    for bolt in BOLTS:
-        if bolt.name == name:
-            return {
-                'name': bolt.name,
-                'address': bolt.address,
-                'color': bolt.color,
-                'low_hsv': bolt.low_hsv,
-                'high_hsv': bolt.high_hsv
-            }
+    if request.method == "GET":
+        global BOLTS_HSV_PREVIEW
 
-    return abort(404)
+        for bolt in BOLTS:
+            if bolt.name == name:
+                BOLTS_HSV_PREVIEW[bolt.name] = {
+                    'low_hsv': bolt.low_hsv,
+                    'high_hsv': bolt.high_hsv
+                }
+
+                return {
+                    'name': bolt.name,
+                    'address': bolt.address,
+                    'color': bolt.color,
+                    'low_hsv': bolt.low_hsv,
+                    'high_hsv': bolt.high_hsv
+                }
+
+        return abort(404)
+    elif request.method == "POST":
+        print("[!] SAVING SETTINGS...")
+
+        for bolt in BOLTS:
+            if bolt.name == name:
+                data = get_json_data()
+                print(f"[!] DATA: {data}")
+
+                bolt.color = data['color']
+                bolt.low_hsv = data['low_hsv']
+                bolt.high_hsv = data['high_hsv']
+
+                # TODO: Save to JSON file
 
 
 @app.route('/bolts/<name>/feed')
@@ -57,6 +78,25 @@ def getBoltHSVFeed(name):
     for bolt in BOLTS:
         if bolt.name == name:
             return Response(video(BOLTS_HSV_PREVIEW[name]['low_hsv'], BOLTS_HSV_PREVIEW[name]['high_hsv']), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+    return abort(404)
+
+
+@app.route('/bolts/<name>/hsv')
+def boltHSV(name):
+    global BOLTS_HSV_PREVIEW
+
+    hsv_values = request.get_json()
+    for bolt in BOLTS:
+        if bolt.name == name:
+            hue = hsv_values['hue']
+            saturation = hsv_values['saturation']
+            value = hsv_values['value']
+
+            BOLTS_HSV_PREVIEW[bolt.name] = {
+                'low_hsv': [hue[0], saturation[0], value[0]],
+                'high_hsv': [hue[1], saturation[1], value[1]]
+            }
 
     return abort(404)
 
