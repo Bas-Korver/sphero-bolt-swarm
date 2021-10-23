@@ -193,7 +193,7 @@ async def sendToCoordinate(bolt, coordinate, CAPTURE):
         # for pic, contour in enumerate(contours):
             contour = max(contours, key=cv2.contourArea)
             area = cv2.contourArea(contour)
-            if area >= 150:
+            if area >= 25:
                 x, y, w, h = cv2.boundingRect(contour)
                 cv2.rectangle(main_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
@@ -210,7 +210,7 @@ async def sendToCoordinate(bolt, coordinate, CAPTURE):
                 else:
                     await bolt.roll(35, int(direction))
 
-        #cv2.imshow(f"Detection for {bolt.name}, coordinates: {coordinate}", main_frame)
+        cv2.imshow(f"Detection for {bolt.name}, coordinates: {coordinate}", main_frame)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
             CAP.release()
