@@ -185,7 +185,7 @@ async def makeTriangle():
     print("[!] Sending BOLTs to circle formation.")
 
     coordinates = helper.getTriangleCoordinates((320, 240), 175, len(BOLTS))
-    print(f"Coordinates: { len(coordinates) }")
+    #print(f"Coordinates: { len(coordinates) }")
 
     for i in range(0, len(coordinates)):
         print(f"[!] Sending BOLTs to {i} coordinates.")

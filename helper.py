@@ -106,7 +106,7 @@ def getTriangleCoordinates(_center=(0, 0), _r=10, _n=10):
     if _n == 3:
         return [[_center[0], _center[1] + _r], [_center[0] - _r/2, _center[1] - _r],
                 [_center[0] + _r/2, _center[1] - _r]]
-    elif 3 < _n >= 6:
+    elif 3 < _n <= 6:
         return [[_center[0], _center[1] + _r],
                 [(_center[0] + (_center[0] - _r / 2)) / 2, (_center[1] + _r + _center[1] - _r) / 2],
                 [_center[0] - _r / 2, _center[1] - _r],
