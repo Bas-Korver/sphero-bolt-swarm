@@ -239,7 +239,7 @@ def video(bolt_name=None):
     global CAPTURE
 
     if CAPTURE is None:
-        CAPTURE = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        CAPTURE = cv2.VideoCapture(2, cv2.CAP_DSHOW)
 
     while CAPTURE.isOpened():
         ret, img = CAPTURE.read()
