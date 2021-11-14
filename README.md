@@ -38,8 +38,6 @@ You must ensure that you have all of these packets for the demonstrator to work 
 When you have completed the installation you can start using the program by running `main.py`.
 
 ---
-_If you have any questions, please contact the case group_
-
 
 # Nederlands
 
@@ -82,4 +80,3 @@ U moet zorgen dat u beschikt over al deze packets voor de juiste werking van de 
 Wanneer u de installatie heeft voltooid kunt u het programma in gebruik nemen door `main.py` te runnen.
 
 ---
-_Bij vragen neem contact op met de casusgroep_
