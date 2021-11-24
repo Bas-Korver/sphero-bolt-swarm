@@ -29,7 +29,7 @@ The specific manual is included in the return folder.
 If you do not have access to this, you can contact one of the case group members.
 
 ### 4.0 Installation ##
-Python __3.8__ is required for the program to work correctly.
+Python __3.7__ is required for the program to work correctly.
 You can download it from the python [website](https://www.python.org/downloads/).
 For the other packets you need to go to the `requirements.txt` file.
 You must ensure that you have all of these packets for the demonstrator to work properly.
