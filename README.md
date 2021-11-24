@@ -71,7 +71,7 @@ De specifieke handleiding wordt meegeleverd in de inlever map.
 Wanneer u hier geen toegang tot heeft kunt u contact opnemen met een van de casus groepsleden.
 
 ### 4.0 Installatie ##
-Voor de juiste werking van het programma is python __3.8__ benodigd. 
+Voor de juiste werking van het programma is python __3.7__ benodigd. 
 Deze kunt u downloaden op de python [website](https://www.python.org/downloads/).
 Voor de andere packets moet u naar het `requirements.txt` bestand gaan.
 U moet zorgen dat u beschikt over al deze packets voor de juiste werking van de demonstrator.
